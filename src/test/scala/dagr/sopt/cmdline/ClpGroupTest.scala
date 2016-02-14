@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 Fulcrum Genomics LLC
+ * Copyright (c) 2015-2016 Fulcrum Genomics LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package dagr.sopt.util
+package dagr.sopt.cmdline
 
-import org.scalatest.{FlatSpec, Matchers}
+import dagr.commons.util.UnitSpec
 
-/** Base class for unit and integration testing */
-class UnitSpec extends FlatSpec with Matchers
+class ClpsGroupOne extends ClpGroup {
+  val name: String = "AAAAA"
+  val description: String = "Various pipeline programs."
+}
+
+class ClpsGroupTwo extends ClpGroup {
+  val name: String = "BBBBB"
+  val description: String = "Various pipeline programs."
+}
+class ClpGroupTest extends UnitSpec {
+
+  "ClpGroup" should "sort groups by alphabetical ordering of name" in {
+    val a = new ClpsGroupOne
+    val b = new ClpsGroupTwo
+    a.compareTo(b) should be < 0
+    a.compareTo(a) shouldBe 0
+    b.compareTo(a) should be > 0
+  }
+}

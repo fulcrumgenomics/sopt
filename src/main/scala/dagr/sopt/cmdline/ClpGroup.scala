@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 Fulcrum Genomics LLC
+ * Copyright (c) 2015-2016 Fulcrum Genomics LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,31 +22,27 @@
  * THE SOFTWARE.
  */
 
-package dagr
+package dagr.sopt.cmdline
 
-import dagr.sopt.cmdline.{ClpAnnotation, ArgAnnotation}
+/**
+  * Trait for groups of CommandLinePrograms.
+  */
+trait ClpGroup extends Ordered[ClpGroup] {
+  /** Gets the name of this program. **/
+  def name : String
+  /** Gets the description of this program. **/
+  def description : String
+  /** The rank of the program group relative to other program groups. */
+  def rank : Int = 1024
+  /** Order groups by rank, then by name. */
+  override def compare(that: ClpGroup): Int = {
+    if (this.rank != that.rank) this.rank.compareTo(that.rank)
+    else this.name.compareTo(that.name)
+  }
+}
 
-package object sopt {
-
-  /** The type of an option's name when option parsing. */
-  type OptionName = String
-
-  /** The type of an option's value when option parsing. */
-  type OptionValue = String
-
-  /**
-    * Used to annotate which fields of a class that has options given at the command line.
-    * If a command line call looks like "cmd option=foo x=y bar baz" the annotated class
-    * would have annotations on fields to handle the values of option and x. All options
-    * must be in the form name=value on the command line. The java type of the option
-    * will be inferred from the type of the field or from the generic type of the collection
-    * if this option is allowed more than once. The type must be an enum or
-    * have a constructor with a single String parameter.
-    */
-  type arg = ArgAnnotation
-
-  /**
-    * Annotation to be placed on classes that are to be exposed as command line programs.
-    */
-  type clp = ClpAnnotation
+/** The program group for the command line programs. */
+class Clps extends ClpGroup {
+  val name: String = "Clps"
+  val description: String = "Various command line programs."
 }

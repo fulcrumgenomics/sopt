@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 Fulcrum Genomics LLC
+ * Copyright (c) 2015-2016 Fulcrum Genomics LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package dagr.sopt.cmdline
 
-package dagr
+import dagr.sopt._
 
-import dagr.sopt.cmdline.{ClpAnnotation, ArgAnnotation}
-
-package object sopt {
-
-  /** The type of an option's name when option parsing. */
-  type OptionName = String
-
-  /** The type of an option's value when option parsing. */
-  type OptionValue = String
-
-  /**
-    * Used to annotate which fields of a class that has options given at the command line.
-    * If a command line call looks like "cmd option=foo x=y bar baz" the annotated class
-    * would have annotations on fields to handle the values of option and x. All options
-    * must be in the form name=value on the command line. The java type of the option
-    * will be inferred from the type of the field or from the generic type of the collection
-    * if this option is allowed more than once. The type must be an enum or
-    * have a constructor with a single String parameter.
-    */
-  type arg = ArgAnnotation
-
-  /**
-    * Annotation to be placed on classes that are to be exposed as command line programs.
-    */
-  type clp = ClpAnnotation
-}
+/**
+  * This collection is for arguments that require special treatment by the arguments parser itself.
+  * It should not grow beyond a very short list.
+  */
+private[cmdline] final case class SpecialArgumentsCollection(
+  @arg(flag = "h", name = "help", doc = "Display the help message.", special = true)
+  var help: Boolean = false,
+  @arg(name = "version", doc = "Display the version number for this tool.", special = true)
+  var version: Boolean = false
+)

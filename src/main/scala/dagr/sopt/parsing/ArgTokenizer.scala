@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 Fulcrum Genomics LLC
+ * Copyright (c) 2015-2016 Fulcrum Genomics LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,8 @@
  * THE SOFTWARE.
  */
 
-package dagr.sopt
+package dagr.sopt.parsing
 
-import java.io.IOException
 import java.nio.file.{Files, Paths}
 import java.util.NoSuchElementException
 
@@ -134,7 +133,7 @@ class ArgTokenizer(args: Seq[String],
     val idx = input.indexOf('=')
     (input.take(idx), input.drop(idx+1)) match {
       case (before, after) if before.isEmpty => Success(ArgOption(name = after))
-      case (before, after) if after.isEmpty => Failure(new OptionNameException(s"Cannot have a trailing '=' in option '$before'"))
+      case (before, after) if after.isEmpty => Failure(new OptionNameException(s"Trailing '=' found in option '$before'; did you forget a value?"))
       case (before, after) => Success(ArgOptionAndValue(name = before, value = after))
     }
   }

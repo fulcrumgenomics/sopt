@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 Fulcrum Genomics LLC
+ * Copyright (c) 2015-2016 Fulcrum Genomics LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package dagr.sopt.cmdline;
 
-package dagr
+import java.lang.annotation.*;
 
-import dagr.sopt.cmdline.{ClpAnnotation, ArgAnnotation}
 
-package object sopt {
+/**
+ * Annotates a command line program with various properties, such as usage (short and long),
+ * as well as to which CLP group it belongs.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Inherited
+public @interface ClpAnnotation {
+    /**
+     * Should return a detailed description of the CLP that can be down when requesting help on the
+     * CLP.  The first sentence (up to the first period) of the description should summarize the
+     * CLP's purpose in a way that it can be displayed in a list of CLPs.
+     */
+    String description();
 
-  /** The type of an option's name when option parsing. */
-  type OptionName = String
+    /** What group does the CLP belong to, for grouping CLPs at the command line. */
+    Class<? extends ClpGroup> group() default Clps.class;
 
-  /** The type of an option's value when option parsing. */
-  type OptionValue = String
-
-  /**
-    * Used to annotate which fields of a class that has options given at the command line.
-    * If a command line call looks like "cmd option=foo x=y bar baz" the annotated class
-    * would have annotations on fields to handle the values of option and x. All options
-    * must be in the form name=value on the command line. The java type of the option
-    * will be inferred from the type of the field or from the generic type of the collection
-    * if this option is allowed more than once. The type must be an enum or
-    * have a constructor with a single String parameter.
-    */
-  type arg = ArgAnnotation
-
-  /**
-    * Annotation to be placed on classes that are to be exposed as command line programs.
-    */
-  type clp = ClpAnnotation
+    /** Should this CLP be hidden from the list shown on the command line. */
+    boolean hidden() default false;
 }

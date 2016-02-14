@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 Fulcrum Genomics LLC
+ * Copyright (c) 2015-2016 Fulcrum Genomics LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,10 @@
  * THE SOFTWARE.
  */
 
-package dagr.sopt
+package dagr.sopt.parsing
 
-import dagr.sopt.OptionLookup.{OptionAndValues, OptionType}
-import dagr.sopt.util.UnitSpec
+import dagr.sopt.parsing.OptionLookup.{OptionAndValues, OptionType}
+import dagr.commons.util.UnitSpec
 
 import scala.util.Try
 
@@ -318,25 +318,27 @@ class OptionLookupTest extends UnitSpec {
     an[IllegalStateException] should be thrownBy optionLookup.printUnknown(name1)
   }
 
-  it should "return an empty string floor when the match is beyond the edit distance" in {
+  it should "return an empty string floor when there are no similar option names" in {
     import OptionLookupWithPrefixes._
-    optionLookup.printUnknown(name1 + "abcdefghijklmnopqrstuvwxyz") shouldBe ""
+    optionLookup.printUnknown(name1 + "abcdefghijklmnopqrstuvwxyz") should not include "Did you mean"
   }
 
-  it should "the next-best option name when within the edit distance" in {
+  it should "return the next-best option name" in {
     val name1 = "name1"
     var optionLookup = new OptionLookup {}.acceptMultipleValues(name1).get
     optionLookup.printUnknown("name3").indexOf(name1) should be > 0
     optionLookup.printUnknown("n").indexOf(name1) should be > 0
     val name2 = "name2"
     optionLookup = optionLookup.acceptMultipleValues(name2).get
-    optionLookup.printUnknown("name3").indexOf(name1) should be > 0
-    optionLookup.printUnknown("name3").indexOf(name2) should be > 0
-    optionLookup.printUnknown("n") shouldBe ""
+    optionLookup.printUnknown("name3") should include (name1)
+    optionLookup.printUnknown("name3") should include (name2)
+    optionLookup.printUnknown("n") should not include name1
+    optionLookup.printUnknown("n") should not include name2
   }
 
   it should "not return any matches if it matches all the option names (when there is greater than one option name)" in {
-    var optionLookup = new OptionLookup {}.acceptMultipleValues("name1").get.acceptMultipleValues("name2").get
-    optionLookup.printUnknown("name") shouldBe ""
+    val optionLookup = new OptionLookup {}.acceptMultipleValues("name1").get.acceptMultipleValues("name2").get
+    optionLookup.printUnknown("name") should not include "name1"
+    optionLookup.printUnknown("name") should not include "name2"
   }
 }

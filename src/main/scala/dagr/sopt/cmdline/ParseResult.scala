@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 Fulcrum Genomics LLC
+ * Copyright (c) 2015-2016 Fulcrum Genomics LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,31 +22,18 @@
  * THE SOFTWARE.
  */
 
-package dagr
+package dagr.sopt.cmdline
 
-import dagr.sopt.cmdline.{ClpAnnotation, ArgAnnotation}
+sealed abstract class ParseResult
 
-package object sopt {
+/** Class that indicates a successful parsing. */
+case class ParseSuccess() extends ParseResult
 
-  /** The type of an option's name when option parsing. */
-  type OptionName = String
+/** Class that indicates a help option was found. */
+case class ParseHelp() extends ParseResult
 
-  /** The type of an option's value when option parsing. */
-  type OptionValue = String
+/** Class that indicates a version option was found. */
+case class ParseVersion() extends ParseResult
 
-  /**
-    * Used to annotate which fields of a class that has options given at the command line.
-    * If a command line call looks like "cmd option=foo x=y bar baz" the annotated class
-    * would have annotations on fields to handle the values of option and x. All options
-    * must be in the form name=value on the command line. The java type of the option
-    * will be inferred from the type of the field or from the generic type of the collection
-    * if this option is allowed more than once. The type must be an enum or
-    * have a constructor with a single String parameter.
-    */
-  type arg = ArgAnnotation
-
-  /**
-    * Annotation to be placed on classes that are to be exposed as command line programs.
-    */
-  type clp = ClpAnnotation
-}
+/** Class that indicates a failure in parsing.  An exception and the remaining arguments, if applicable, are provied. */
+case class ParseFailure(ex: Exception, remaining: Traversable[String]) extends ParseResult

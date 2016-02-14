@@ -21,32 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package dagr.sopt.cmdline.testing.fields
 
-package dagr
+import dagr.commons.util.LogLevel
 
-import dagr.sopt.cmdline.{ClpAnnotation, ArgAnnotation}
+/** For testing the ability to find and filter classes with the CLP property */
 
-package object sopt {
-
-  /** The type of an option's name when option parsing. */
-  type OptionName = String
-
-  /** The type of an option's value when option parsing. */
-  type OptionValue = String
-
-  /**
-    * Used to annotate which fields of a class that has options given at the command line.
-    * If a command line call looks like "cmd option=foo x=y bar baz" the annotated class
-    * would have annotations on fields to handle the values of option and x. All options
-    * must be in the form name=value on the command line. The java type of the option
-    * will be inferred from the type of the field or from the generic type of the collection
-    * if this option is allowed more than once. The type must be an enum or
-    * have a constructor with a single String parameter.
-    */
-  type arg = ArgAnnotation
-
-  /**
-    * Annotation to be placed on classes that are to be exposed as command line programs.
-    */
-  type clp = ClpAnnotation
+object Fields {
+  type PathToSomething = java.nio.file.Path
 }
+class WithList(var list: List[_])
+class WithIntList(var list: List[Int])
+class WithJavaCollection(var list: java.util.Collection[_])
+class WithJavaSet(var set: java.util.Set[_])
+class WithOption(var v: Option[_])
+class WithIntOption(var v: Option[Int])
+class WithInt(var v: Int)
+class WithMap(var map: Map[_, _])
+class WithPathToBamOption(var path: Option[Fields.PathToSomething])
+class WithString(var s: String)
+class WithPathToBam(var path: Fields.PathToSomething)
+class WithStringParent(var s: String = "")
+class WithStringChild(var t: String) extends WithStringParent
+class WithEnum(var verbosity: LogLevel = LogLevel.Info)
+class SetClass(var set: Set[_] = Set.empty)
+class SeqClass(var seq: Seq[_] = Nil)

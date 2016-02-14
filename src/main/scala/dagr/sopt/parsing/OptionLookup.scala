@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2015 Fulcrum Genomics LLC
+ * Copyright (c) 2015-2016 Fulcrum Genomics LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
-package dagr.sopt
+package dagr.sopt.parsing
 
-import dagr.sopt.util.StringUtil
+import dagr.sopt.util.ParsingUtil
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -218,67 +218,32 @@ trait OptionLookup {
   def optionValues(optionName: String): Try[List[String]] = {
     this.findExactOrPrefix(optionName) match {
       case Nil =>
-        Failure(IllegalOptionNameException(s"No option found with name '$optionName'.${printUnknown(optionName)}"))
+        Failure(IllegalOptionNameException(printUnknown(optionName)))
       case option :: Nil => Success(option.toList)
       case _ =>
-        Failure(DuplicateOptionNameException(s"Multiple options found for name '$optionName': " + optionNamesWithPrefix(optionName).mkString(", ")))
+        Failure(DuplicateOptionNameException(printMultipleValuesFound(optionName)))
     }
   }
 
   /** Adds value(s) to the given option and returns all values for the given option */
   protected[sopt] def addOptionValues(optionName: String, values: String*): Try[Traversable[String]] = {
     this.findExactOrPrefix(optionName) match {
-      case Nil => Failure(IllegalOptionNameException(s"No option found for name '$optionName'.${printUnknown(optionName)}"))
+      case Nil => Failure(IllegalOptionNameException(printUnknown(optionName)))
       case option :: Nil =>
         option.add(optionName, values:_*) match {
           case Success(opt) => Success(opt.toList)
           case Failure(failure) => Failure(failure)
         }
       case _ =>
-        Failure(DuplicateOptionNameException(s"Multiple options found for name '$optionName': " + optionNamesWithPrefix(optionName).mkString(", ")))
+        Failure(DuplicateOptionNameException(printMultipleValuesFound(optionName)))
     }
   }
 
-  /** Similarity floor for matching in printUnknown **/
-  protected def printUnknownSimilarityFloor: Int = 7
-  protected def printUnknownSubstringLength: Int = 5
-
-  /** When a command does not match any known command, searches for similar commands, using the same method as GIT **/
   private[sopt] def printUnknown(optionName: String): String = {
-    val distances: mutable.Map[String, Integer] = new mutable.HashMap[String, Integer]
-    var bestDistance: Int = Integer.MAX_VALUE
-    var bestN: Int = 0
-    optionNames.foreach{ name =>
-      if (name == optionName) {
-        throw new IllegalStateException(s"BUG: Option name matches when searching for the unknown: $name")
-      }
-      val distance: Int = if (name.startsWith(optionName) || (printUnknownSubstringLength <= optionName.length && name.contains(optionName))) {
-        0
-      }
-      else {
-        StringUtil.levenshteinDistance(optionName, name, 0, 2, 1, 4)
-      }
-      distances.put(name, distance)
-      if (distance < bestDistance) {
-        bestDistance = distance
-        bestN = 1
-      }
-      else if(distance == bestDistance) {
-        bestN += 1
-      }
-    }
-    if (0 == bestDistance && 1 < bestN && bestN == optionNames.size) {
-      bestDistance = printUnknownSimilarityFloor + 1
-    }
-    if (bestDistance < printUnknownSimilarityFloor) {
-      val optionSeparator = "\n        "
-      String.format("\nDid you mean %s?%s",
-        if (bestN < 2) "this" else "one of these",
-        optionSeparator + optionNames.filter(bestDistance == distances.get(_).get).mkString(optionSeparator)
-      )
-    }
-    else {
-      ""
-    }
+    s"No option found with name '$optionName'.${ParsingUtil.printUnknown(optionName, optionNames)}"
+  }
+
+  private [sopt] def printMultipleValuesFound(optionName: String): String = {
+    s"Multiple options found for name '$optionName': " + optionNamesWithPrefix(optionName).mkString(", ")
   }
 }
