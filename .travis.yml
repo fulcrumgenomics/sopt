@@ -10,15 +10,16 @@ script:
 - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
 cache:
   directories:
-  - $HOME/.ivy2/cache
-  - $HOME/.sbt/boot/
+  - "$HOME/.ivy2/cache"
+  - "$HOME/.sbt/boot/"
 before_install:
 - pip install --user codecov
 - sudo chmod +x /usr/local/bin/sbt
 after_success:
 - codecov
-- test "$TRAVIS_REPO_SLUG" == 'fulcrumgenomics/sopt' && test "$TRAVIS_PULL_REQUEST" == 'false' && test "$TRAVIS_BRANCH" == 'master' && sbt publish
+- test "$TRAVIS_REPO_SLUG" == 'fulcrumgenomics/sopt' && test "$TRAVIS_PULL_REQUEST"
+  == 'false' && test "$TRAVIS_BRANCH" == 'master' && sbt publish
 env:
   global:
-  - secure: AjbCqJPaYLWVYTNS7Czdu+SVX0Vs1bDuVg+YjNasFs8peu97hQxx9TNqxZcvrs8SwGD6gXlJComMJPVeLUjYf/EqmJMICtS/UTTBONlfEZgF+KSO1FeXxyvsFskuCn9GxK8JSGE49YKCWnSuAQ6JBgjSidUVgumjiyFg7Dgac5rUNJZ4SR7nQbufF5NsegLZNEsiDJxK20roksZnbdpI7PQE/pthoTzowLuElMEFpF5DZ9LfY/HeSm3+s0edYOVBgivc2tjqROSsgOEmz3uQ0tLpvaAMpt0aSXuultql3GL1aiJKFjo21vbEA95jlfdq/BXZvh6q25TaciGT0LZOBcbQSiwsIsWQfulw7QEQ1C0mv1UuYBHvF4jeMVTRL3Aj7El1fNeHA8nkNTr+GZEcRpkBQOHuD9kDX7Ks6iU8+arsSr7YnR6eENJd/UB8XogZvKydFbUJ90Cmn5W4S1BHQXsv2BkJ/BubdH3groEfKbUsrGRjf7oBt/l0O8X5SO5+fAF3KCsHDSAIIM16b14RXKCrASkIGc4S0wQryRksMZADl6GUZCnIyWLUfNQC5SXS30K4f8ny7LG9yYzfph++S+s3YUC0qS+ZFLG6fHcw+kjOi7nwrR+oyJp2Q2f5z3Vq1A81h1NgOMR3lQn002oes+TYTymY+/SXcldV+9p5MHE=
-  - secure: YgmhR2puvVq8w5UAmo3UPjm1CKTKGq7cc3TneKASiZW/eHj/GAJ1BHDjSNNUS1eaNQr16H+2ws1u6tD2rOGRuISnQtRagncVrcviXaRBI8PDLrTC6N0pcUFMvziUuJAwmPgfeZDfZQpev9Ssod6z6rPRR8bFC69KV7Df90M1SjWP/c5dU62TBIw5EOyP3q8ui3W4tMEeFuYCH9CPKErqopfiDHRkJhE4DHuMKVA+xLT/TzEzsyJMJqXHVfow/N3tGRraL5G6JBUiwerPj0/Tm1ovd/4xT9Jqr4ujoG0cWydNEkK9pcMpBNFnV30krTgMtw8ibwZJPkFWk40De4fDj4UU7HQEdyfEj2zcfoWRvI+RvzTw6xVsWXSurTKJwSc+6e/7xjn4zgFngr6WYt26PFH/sKgG3FjtiEAiNOOgyAlN8N7MZhYVWpgzzNAyzaCrfqlpLOzxcEqI+vum2SAZCdNWME+t/Hd16GXRpR4pHmuvHqVR5cK9XmpSE9eB6svB3sQiJC46KfmlfBkwXIu57syyKrFSlLf/QeuviUza0kRHQ+1HbjCHna600HP78arZuYrZgpDI2nQlEn9LasHkhiaKTtb2/an3cFLD1ld5NLuY/3AymWP1zvvo7iOGcrrhRUwxS81dYPCqW+x1rvcQszyioR4WrsLbLy3vGaU3NWI=
+  - secure: UMOsCpZywad7O1Oj03l+hDnaNsQt/vTJKF1K83nCgozMR6LTr9XltjL2YnfHs1t37q1ClFNXC2KDGf4IEVeOISl1W/i+gK9rSFP54V2h1vLn3LD7pvI3i4rMU0MOaIPxP7HgTUb9SulmfcQmDP4wAoo4WQXO4tal2ETn+7JPngLIAw/cZebMEroh0ro3Di3UEr/k+BFUzQlhsKyl3BGWZLCssiHRdEuHal+yb80czBgFX5aFHRwlbwTGHmdQ0QPhicj4YQly/DHO53J8YrRLNxmYy1LQUxPujWMY/opAvJQfZrwuGATnmqUPJc5pd0HMqPV1UfRaA+bFmMnkpTy2YobxHzxxFwGLgQ6b8wE1U6yEM34OniltJoPk0rMJdaKiYazcKd3GIlo0rcVMb4Ul81SfgyCi7JNe2chQVEF9eoYo4C18muS9yvs0AltCNimqj8Zd5VL0q6ynsK7oMoY0ot5ZeP+35OgxLsCipCnG3ysJ/JKhFuce4N5m8HiFY4QRumATcquk5fGHE4waVdq+llXivHFu3mqPAYrNJ8B74CEJIkzN+kUl4AOzJJKzmvFluxf096HDn7sjOPFBv8//tx2tQPI9RInp1DbAcO64UDKDHKBfo0EV41ruik8VibpZE8N1DcXpWX6PSZXIQ7wvKgVtAS7nreREOyQvMVBF03Y=
+  - secure: eRvt4aBa+PNZChKCCKWJZXcOYot0MEAITej9gqEuSUvsLwx3IV3zC4NrRhiNFteaU1pbO+GYPHUwjDDtilIjystpaTjAqC7ub53QCEEKsUp5inNAkWItdjcfz0yW2ep3sYWnkyc8kfBZB8sLOFcuxtHuXXV97iLuVaOBsmYdbUJE7ZXf+qzPfeLjlhXUf2EQmjbe/9eXF2kK/6McLaECNSm1tX1KfknmxEb2EkprNCtnioQrBwEKkyt5k+0XvW5/pf9u/sK63ZrHwYlpMz/IJ9jvJcjSSIVT/KRD4Q1rE5+PCKMwc7X+beHw3Vepp7+12NfsOLi9mrtyrk/BUjinCZs7U89dJuNbB+zNBfQY1+waXFb6rHoNBHHehcscmmZHMTdFSK7PBkBhpZtyeIBakVXiE+apnKtivXapbfC+XA/8sngKhcLeHhNQOUd9I2rdTJ9b1OGVmPZX8YbPXZzC5RTnJ4I2ffBIrWRvq5jqOjWXm576RqihHdlkIFir9szS9VlWT6dsTnwojSk0D9oL1c80Svenbn8gOzkiDg/MqgJAE/uxvh9tV5kblXSVghmUuK9Hkigr7oBlmdMd3mNF1FIY5kMnxQ/in37P9dt1krXcL+FHuOJOnTsvSq3ywimRuCl+zz4z0y6PoraInHEKxrYXpYDNnb4Kk1tuZMKdzD4=
