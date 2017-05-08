@@ -97,6 +97,7 @@ lazy val commonSettings = Seq(
   //testOptions in Test  += Tests.Argument("-oD"),
   fork in Test         := true,
   resolvers            += Resolver.jcenterRepo,
+  resolvers            += Resolver.sonatypeRepo("public"),
   shellPrompt          := { state => "%s| %s> ".format(GitCommand.prompt.apply(state), version.value) },
   updateOptions        := updateOptions.value.withCachedResolution(true)
 ) ++ Defaults.coreDefaultSettings
