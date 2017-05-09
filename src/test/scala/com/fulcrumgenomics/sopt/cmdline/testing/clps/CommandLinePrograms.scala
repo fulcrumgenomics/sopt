@@ -23,7 +23,7 @@
  */
 package com.fulcrumgenomics.sopt.cmdline.testing.clps
 
-import dagr.sopt._
+import com.fulcrumgenomics.sopt._
 import com.fulcrumgenomics.sopt.cmdline.TestGroup
 import com.fulcrumgenomics.sopt.cmdline.TestingClp
 

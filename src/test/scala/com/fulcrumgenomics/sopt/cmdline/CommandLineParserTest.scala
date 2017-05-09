@@ -26,9 +26,11 @@ package com.fulcrumgenomics.sopt.cmdline
 
 import com.fulcrumgenomics.commons.reflect.ReflectionUtil
 import com.fulcrumgenomics.commons.util.{CaptureSystemStreams, LogLevel, Logger}
-import com.fulcrumgenomics.sopt.cmdline._
+import com.fulcrumgenomics.sopt.Sopt
+import com.fulcrumgenomics.sopt.Sopt.{CommandSuccess, Failure, SubcommandSuccess}
+import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.sopt.util.TermCode
-import dagr.sopt._
+import com.fulcrumgenomics.sopt._
 import com.fulcrumgenomics.sopt.cmdline.testing.clps._
 import com.fulcrumgenomics.sopt.util.UnitSpec
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
@@ -53,32 +55,17 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
   private object TestParseSubCommand {
     val packageList: List[String] = List[String]("com.fulcrumgenomics.sopt.cmdline.testing.clps")
 
-    def parseSubCommand[ClpClass](args: Array[String],
-                   clpBlock: Option[ClpClass => Unit] = None,
-                   extraUsage: Option[String] = None
-                  )
+    def parseSubCommand[ClpClass](args: Array[String], extraUsage: Option[String] = None)
                   (implicit classTag: ClassTag[ClpClass], typeTag: TypeTag[ClpClass]): (CommandLineParser[ClpClass], Option[ClpClass], String)
      = {
       val parser = new CommandLineParser[ClpClass]("command-line-name")
-      Logger.synchronized { // since we modify the log level
-      val logLevel = Logger.level
-        Logger.level = LogLevel.Fatal // turn off all logging
-        var clpOption: Option[ClpClass] = None
-        val output: String = captureStderr(() => {
-          def blockMethod: ClpClass => Unit = clpBlock.getOrElse((t: ClpClass) => Unit)
-          parser.parseSubCommand(
-            args=args,
-            packageList=packageList,
-            includeHidden = true,
-            extraUsage = extraUsage,
-            afterSubCommandBuild = blockMethod) match {
-            case Some(clp) =>
-              clpOption = Some(clp)
-            case None => Unit
-          }
-        })
-        Logger.level = logLevel // turn logging back on
-        (parser, clpOption, output)
+      val subcommands = Sopt.find[ClpClass](packageList, includeHidden = true)
+      val result = parser.parseSubCommand(args, subcommands, extraUsage=extraUsage)
+
+      result match {
+        case CommandSuccess(command) => (parser, Some(command), "")
+        case Failure(usage)          => (parser, None, usage())
+        case other                   => unreachable(s"Should not have matched: $other")
       }
     }
 
@@ -181,17 +168,6 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
     }
   }
 
-  it should "print a usage when a ValidationException is thrown the block method" in {
-    val clpClazz = classOf[CommandLineProgramThree]
-    val name = nameOf(clpClazz)
-    val args = Array[String](name, "--argument", "value")
-    val blockMethod: CommandLineProgramThree => Unit = (clp: CommandLineProgramThree) => {
-      throw new ValidationException("Testing")
-    }
-    val (parser, clpOption, output) = TestParseSubCommand.parseSubCommand[CommandLineProgramThree](args, clpBlock=Some(blockMethod))
-    output should include ("Testing")
-  }
-
   it should "print an extra usage if desired" in {
     val clpClazz = classOf[CommandLineProgramThree]
     val name = nameOf(clpClazz)
@@ -209,40 +185,22 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
   it should "print at most the maximum line length" in {
     val parser = new CommandLineParser[CommandLineParserTest](commandLineName="Name")
     parser.formatShortDescription("A B C D E F G") shouldBe "A B C D E F G"
-    parser.formatShortDescription("A" * (parser.MaximumLineLength+1)) shouldBe (("A" * (parser.MaximumLineLength-3)) + "...")
+    parser.formatShortDescription("A" * (parser.SubCommandDescriptionLineLength+1)) shouldBe (("A" * (parser.SubCommandDescriptionLineLength-3)) + "...")
   }
 
-  private object TestParsecommandAndClp {
+  private object TestParseCommandAndSub {
     val packageList: List[String] = List[String]("com.fulcrumgenomics.sopt.cmdline.testing.clps")
 
-    def parseCommandAndClp[commandClass,ClpClass](args: Array[String],
-                                            commandBlock: commandClass => Unit = (t: commandClass) => (),
-                                            clpBlock: commandClass => ClpClass => Unit = (t: commandClass) => (c: ClpClass) => () )
-                                           (implicit classTag: ClassTag[ClpClass], typeTag: TypeTag[ClpClass], tt: TypeTag[commandClass])
-    : (CommandLineParser[ClpClass], Option[commandClass], Option[ClpClass], String) = {
-      val commandClazz: Class[commandClass] = ReflectionUtil.typeTagToClass[commandClass]
-      val commandName = commandClazz.getSimpleName
-      val parser = new CommandLineParser[ClpClass](commandName)
-      Logger.synchronized { // since we modify the log level
-      val logLevel = Logger.level
-        Logger.level = LogLevel.Fatal // turn off all logging
-        var commandOption: Option[commandClass] = None
-        var clpOption: Option[ClpClass] = None
-        val output: String = captureStderr(() => {
-          parser.parseCommandAndSubCommand[commandClass](
-            args=args,
-            packageList=packageList,
-            includeHidden = true,
-            afterCommandBuild = commandBlock,
-            afterSubCommandBuild = clpBlock) match {
-            case Some((commandInstance, clpInstance)) =>
-              commandOption = Some(commandInstance)
-              clpOption = Some(clpInstance)
-            case None => Unit
-          }
-        })
-        Logger.level = logLevel // turn logging back on
-        (parser, commandOption, clpOption, output)
+    def parseCommandAndSub[Command:TypeTag:ClassTag,Subcommand:TypeTag:ClassTag](args: Array[String]):
+    (CommandLineParser[Subcommand], Option[Command], Option[Subcommand], String) = {
+      val commandClass: Class[Command] = ReflectionUtil.typeTagToClass[Command]
+      val parser = new CommandLineParser[Subcommand](commandClass.getSimpleName)
+      val subcommands = Sopt.find[Subcommand](packageList, includeHidden=true)
+
+      parser.parseCommandAndSubCommand[Command](args, subcommands) match {
+        case SubcommandSuccess(cmd, sub) => (parser, Some(cmd), Some(sub), "")
+        case Failure(usage)              => (parser, None, None, usage())
+        case other                       => unreachable(s"Should not have gotten $other")
       }
     }
 
@@ -281,8 +239,8 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
 
   "CommandLineParser.parseCommandAndSubCommand" should "print just the command usage when no arguments or the help flag are/is given" in {
     Stream(Array[String](), Array[String]("-h"), Array[String]("--help")).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramOne](args)
-      TestParsecommandAndClp.checkEmptyUsage[CommandLineProgramTesting,CommandLineProgramOne](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramOne](args)
+      TestParseCommandAndSub.checkEmptyUsage[CommandLineProgramTesting,CommandLineProgramOne](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
       if (args.isEmpty) {
         output should include(parser.MissingSubCommand)
       }
@@ -291,7 +249,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
 
   it should "print just the command version when -v or --version is given" in {
     Stream(Array[String]("-v"), Array[String]("--version")).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramOne](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramOne](args)
       val version: String = new CommandLineProgramParser(classOf[CommandLineProgramTesting]).version
       output should include(version)
     }
@@ -299,8 +257,8 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
 
   it should "print just the command usage when only command and clp separator \"--\" is given" in {
     val args = Array[String]("--")
-    val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramOne](args)
-    TestParsecommandAndClp.checkEmptyUsage[CommandLineProgramTesting,CommandLineProgramOne](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
+    val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramOne](args)
+    TestParseCommandAndSub.checkEmptyUsage[CommandLineProgramTesting,CommandLineProgramOne](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
     output should include(parser.MissingSubCommand)
   }
 
@@ -310,7 +268,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       Array[String]("-", "CommandLineProgramFive"),
       Array[String]("-CommandLineProgramFive")
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramOne](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramOne](args)
       commandOption shouldBe 'empty
       clpOption shouldBe 'empty
       output should include(parser.standardCommandAndSubCommandUsagePreamble(commandClazz=Some(classOf[CommandLineProgramTesting]), subCommandClazz=None))
@@ -322,7 +280,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       Array[String]("---", "CommandLineProgramFive"),
       Array[String]("--CommandLineProgramFive")
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramOne](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramOne](args)
       commandOption shouldBe 'empty
       clpOption shouldBe 'empty
       output should include(parser.standardCommandAndSubCommandUsagePreamble(commandClazz=Some(classOf[CommandLineProgramTesting]), subCommandClazz=None))
@@ -336,7 +294,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       Array[String]("--", "CommandLineProgramOn", "--flag"),
       Array[String]("CommandLineProgramOn")
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramOne](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramOne](args)
       commandOption shouldBe 'empty
       clpOption shouldBe 'empty
       output should include(parser.standardCommandAndSubCommandUsagePreamble(commandClazz=Some(classOf[CommandLineProgramTesting]), subCommandClazz=None))
@@ -348,7 +306,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
     Stream(
       Array[String](nameOf(classOf[CommandLineProgramOne]))
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramValidationError,CommandLineProgramOne](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramValidationError,CommandLineProgramOne](args)
       commandOption shouldBe 'empty
       clpOption shouldBe 'empty
       output should include(parser.standardCommandAndSubCommandUsagePreamble(commandClazz=Some(classOf[CommandLineProgramValidationError]), subCommandClazz=None))
@@ -359,32 +317,32 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
 
   it should "print the command and clp usage when only the clp name is given" in {
     val args = Array[String](nameOf(classOf[CommandLineProgramThree]))
-    val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramThree](args)
+    val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramThree](args)
     commandOption shouldBe 'empty
     clpOption shouldBe 'empty
-    TestParsecommandAndClp.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
+    TestParseCommandAndSub.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
   }
 
   it should "print the command and clp usage when only the clp name separator \"--\" and clp name are given" in {
     val args = Array[String]("--", nameOf(classOf[CommandLineProgramThree]))
-    val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramThree](args)
+    val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramThree](args)
     commandOption shouldBe 'empty
     clpOption shouldBe 'empty
-    TestParsecommandAndClp.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
+    TestParseCommandAndSub.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
   }
 
   it should "print the command and clp usage when only the clp name and -h are given" in {
     val args = Array[String](nameOf(classOf[CommandLineProgramThree]), "-h")
-    val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramThree](args)
+    val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramThree](args)
     commandOption shouldBe 'empty
     clpOption shouldBe 'empty
-    TestParsecommandAndClp.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
+    TestParseCommandAndSub.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
   }
 
   it should "print just the command version when -v or --version with a clp name" in {
     Stream("-v", "--version").foreach { arg =>
       val args = Array[String](nameOf(classOf[CommandLineProgramThree]), arg)
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramThree](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramThree](args)
       commandOption shouldBe 'empty
       clpOption shouldBe 'empty
       val version = new CommandLineProgramParser(classOf[CommandLineProgramTesting]).version
@@ -394,10 +352,10 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
 
   it should "print the command and clp usage when only the clp name separator \"--\" and clp name and -h are given" in {
     val args = Array[String]("--", nameOf(classOf[CommandLineProgramThree]), "-h")
-    val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramThree](args)
+    val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramThree](args)
     commandOption shouldBe 'empty
     clpOption shouldBe 'empty
-    TestParsecommandAndClp.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
+    TestParseCommandAndSub.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
   }
 
   it should "print the command and clp usage when unknown clp arguments are given " in {
@@ -406,10 +364,10 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       Array[String](nameOf(classOf[CommandLineProgramThree]), "--blarg", "4"),
       Array[String](nameOf(classOf[CommandLineProgramThree]), nameOf(classOf[CommandLineProgramTwo]))
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output: String) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramThree](args)
+      val (parser, commandOption, clpOption, output: String) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramThree](args)
       commandOption shouldBe 'empty
       clpOption shouldBe 'empty
-      TestParsecommandAndClp.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
+      TestParseCommandAndSub.checkEmptyClpUsage[CommandLineProgramTesting,CommandLineProgramThree](parser=parser, commandOption=commandOption, clpOption=clpOption, output=output)
     }
   }
 
@@ -418,7 +376,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       Array[String]("--", nameOf(classOf[CommandLineProgramThree])),
       Array[String](nameOf(classOf[CommandLineProgramThree]))
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramThree](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramThree](args)
       commandOption shouldBe 'empty
       clpOption shouldBe 'empty
       output should include(classOf[UserException].getSimpleName)
@@ -431,7 +389,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       Array[String]("--", nameOf(classOf[CommandLineProgramWithMutex]), "--argument", "value", "--another", "value"),
       Array[String](nameOf(classOf[CommandLineProgramWithMutex]), "--argument", "value", "--another", "value")
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramWithMutex](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramWithMutex](args)
       commandOption shouldBe 'empty
       clpOption shouldBe 'empty
       output should include(classOf[UserException].getSimpleName)
@@ -444,7 +402,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       Array[String]("--", nameOf(classOf[CommandLineProgramThree]), "--argument", "value"),
       Array[String](nameOf(classOf[CommandLineProgramThree]), "--argument", "value")
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramThree](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramThree](args)
       commandOption shouldBe 'defined
       commandOption.get.getClass shouldBe classOf[CommandLineProgramTesting]
       clpOption shouldBe 'defined
@@ -460,7 +418,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       Array[String]("--", nameOf(classOf[CommandLineProgramFour])),
       Array[String](nameOf(classOf[CommandLineProgramFour]))
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramFour](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramFour](args)
       commandOption shouldBe 'defined
       commandOption.get.getClass shouldBe classOf[CommandLineProgramTesting]
       clpOption shouldBe 'defined
@@ -477,7 +435,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       Array[String]("--", nameOf(classOf[CommandLineProgramNoArgs])),
       Array[String](nameOf(classOf[CommandLineProgramNoArgs]))
     ).foreach { args =>
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramNoArgs](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramNoArgs](args)
       commandOption shouldBe 'defined
       commandOption.get.getClass shouldBe classOf[CommandLineProgramTesting]
       clpOption shouldBe 'defined
@@ -490,7 +448,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
 
   it should "return a valid clp that has an option with a default value" in {
     val args = Array[String](nameOf(classOf[CommandLineProgramWithOptionSomeDefault]))
-    val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramWithOptionSomeDefault](args)
+    val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramWithOptionSomeDefault](args)
     commandOption shouldBe 'defined
     commandOption.get.getClass shouldBe classOf[CommandLineProgramTesting]
     clpOption shouldBe 'defined
@@ -504,7 +462,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
 
   it should "return a valid clp when an option with a default value is set to none" in {
     val args = Array[String](nameOf(classOf[CommandLineProgramWithOptionSomeDefault]), "--argument", ReflectionUtil.SpecialEmptyOrNoneToken)
-    val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting,CommandLineProgramWithOptionSomeDefault](args)
+    val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting,CommandLineProgramWithOptionSomeDefault](args)
     commandOption shouldBe 'defined
     commandOption.get.getClass shouldBe classOf[CommandLineProgramTesting]
     clpOption shouldBe 'defined
@@ -518,7 +476,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
   it should "return a valid clp when an collection with a default value is set to empty" in {
     Seq(ReflectionUtil.SpecialEmptyOrNoneToken.toUpperCase, ReflectionUtil.SpecialEmptyOrNoneToken.toLowerCase()).foreach { token =>
       val args = Array[String](nameOf(classOf[CommandLineProgramWithSeqDefault]), "--argument", token)
-      val (parser, commandOption, clpOption, output) = TestParsecommandAndClp.parseCommandAndClp[CommandLineProgramTesting, CommandLineProgramWithSeqDefault](args)
+      val (parser, commandOption, clpOption, output) = TestParseCommandAndSub.parseCommandAndSub[CommandLineProgramTesting, CommandLineProgramWithSeqDefault](args)
       commandOption shouldBe 'defined
       commandOption.get.getClass shouldBe classOf[CommandLineProgramTesting]
       clpOption shouldBe 'defined
@@ -537,16 +495,12 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
   }
 
   private object TestSplitArgs {
-    val parser = new CommandLineParser[CommandLineProgram]("CommandLineName")
-    val packageList = List("com.fulcrumgenomics.sopt.cmdline.testing.clps")
+    private val parser = new CommandLineParser[CommandLineProgram]("CommandLineName")
+    private val packageList = List("com.fulcrumgenomics.sopt.cmdline.testing.clps")
+    private val subcommands = Sopt.find[CommandLineProgram](packageList, includeHidden=true)
 
     def testSplitArgs(args: Array[String], commandArgsSize: Int, clpArgsSize: Int): Unit = {
-      val (commandArgs, clpArgs) = parser.splitArgs(
-        args,
-        packageList,
-        List(),
-        includeHidden=true
-      )
+      val (commandArgs, clpArgs) = parser.splitArgs(args, subcommands)
       commandArgs should have size commandArgsSize
       clpArgs should have size clpArgsSize
     }

@@ -25,7 +25,7 @@
 package com.fulcrumgenomics.sopt.cmdline
 
 import com.fulcrumgenomics.commons.reflect.ReflectionUtil
-import dagr.sopt.arg
+import com.fulcrumgenomics.sopt.arg
 import com.fulcrumgenomics.sopt.util.UnitSpec
 
 private case class IntNoDefault(@arg v: Int)

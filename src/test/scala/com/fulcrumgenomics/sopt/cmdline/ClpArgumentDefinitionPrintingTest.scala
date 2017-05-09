@@ -27,7 +27,6 @@ package com.fulcrumgenomics.sopt.cmdline
 
 import java.util
 
-import com.fulcrumgenomics.sopt.cmdline.ClpArgumentDefinitionPrinting
 import com.fulcrumgenomics.sopt.util.TermCode
 import com.fulcrumgenomics.sopt.util.UnitSpec
 import org.scalatest.BeforeAndAfterAll
@@ -56,13 +55,13 @@ class ClpArgumentDefinitionPrintingTest extends UnitSpec with BeforeAndAfterAll 
     makeDefaultValueString(Some(Nil)) shouldBe ""
     makeDefaultValueString(Some(Set.empty)) shouldBe ""
     makeDefaultValueString(Some(new util.ArrayList[java.lang.Integer]())) shouldBe ""
-    makeDefaultValueString(Some(Some("Value"))) shouldBe "[Default: Value]. "
-    makeDefaultValueString(Some("Value")) shouldBe "[Default: Value]. "
-    makeDefaultValueString(Some(Some(Some("Value")))) shouldBe "[Default: Some(Value)]. "
-    makeDefaultValueString(Some(List("A", "B", "C"))) shouldBe "[Default: A, B, C]. "
+    makeDefaultValueString(Some(Some("Value"))) shouldBe "[Default: Value]."
+    makeDefaultValueString(Some("Value")) shouldBe "[Default: Value]."
+    makeDefaultValueString(Some(Some(Some("Value")))) shouldBe "[Default: Some(Value)]."
+    makeDefaultValueString(Some(List("A", "B", "C"))) shouldBe "[Default: A, B, C]."
   }
 
-  private def printArgumentUsage(name: String, shortName: String, theType: String,
+  private def printArgumentUsage(name: String, shortName: Option[Char], theType: String,
                                  collectionDescription: Option[String], argumentDescription: String): String = {
     val stringBuilder = new StringBuilder
     ClpArgumentDefinitionPrinting.printArgumentUsage(stringBuilder=stringBuilder, name, shortName, theType, collectionDescription, argumentDescription)
@@ -72,14 +71,14 @@ class ClpArgumentDefinitionPrintingTest extends UnitSpec with BeforeAndAfterAll 
   // NB: does not test column wrapping
   "ClpArgumentDefinitionPrinting.printArgumentUsage" should "print usages" in {
     val longName    = "long-name"
-    val shortName   = "s"
+    val shortName   = Option('s')
     val theType     = "TheType"
     val description = "Some description"
 
-    printArgumentUsage(longName, shortName, theType, None, description).startsWith(s"-$shortName $theType, --$longName=$theType") shouldBe true
-    printArgumentUsage(longName, shortName, "Boolean", None, description).startsWith(s"-$shortName [true|false], --$longName[=true|false]") shouldBe true
-    printArgumentUsage(longName, "", theType, None, description).startsWith(s"--$longName=$theType") shouldBe true
-    printArgumentUsage(longName, shortName, theType, Some("+"), description).startsWith(s"-$shortName $theType+, --$longName=$theType+") shouldBe true
-    printArgumentUsage(longName, shortName, theType, Some("{0,20}"), description).startsWith(s"-$shortName $theType{0,20}, --$longName=$theType{0,20}") shouldBe true
+    printArgumentUsage(longName, shortName, theType,   None,           description).startsWith(s"-${shortName.get} $theType, --$longName=$theType") shouldBe true
+    printArgumentUsage(longName, shortName, "Boolean", None,           description).startsWith(s"-${shortName.get} [true|false], --$longName[=true|false]") shouldBe true
+    printArgumentUsage(longName, None     , theType,   None,           description).startsWith(s"--$longName=$theType") shouldBe true
+    printArgumentUsage(longName, shortName, theType,   Some("+"),      description).startsWith(s"-${shortName.get} $theType+, --$longName=$theType+") shouldBe true
+    printArgumentUsage(longName, shortName, theType,   Some("{0,20}"), description).startsWith(s"-${shortName.get} $theType{0,20}, --$longName=$theType{0,20}") shouldBe true
   }
 }

@@ -26,7 +26,7 @@ package com.fulcrumgenomics.sopt.cmdline
 import java.nio.file.Path
 
 import com.fulcrumgenomics.commons.io.PathUtil
-import dagr.sopt.arg
+import com.fulcrumgenomics.sopt.arg
 import com.fulcrumgenomics.sopt.util.UnitSpec
 import org.scalatest.OptionValues
 
@@ -215,11 +215,6 @@ class ClpArgumentTest extends UnitSpec with OptionValues {
     argument.setArgument("false")
     argument.value.get should be(false.asInstanceOf[Any])
     argument.value.get.asInstanceOf[Boolean] should be(false)
-  }
-
-  it should "correctly un-wrap argument docs that use multi-line syntax" in {
-    val argument = makeClpArgument(classOf[LongArgDoc], defaultValue="foo")
-    argument.doc shouldBe "This is supposed to be wrapped."
   }
 
   it should "throw an IllegalStateException when creating an argument without an annotation with no default" in {
