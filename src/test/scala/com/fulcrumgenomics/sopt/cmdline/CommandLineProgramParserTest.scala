@@ -26,7 +26,7 @@ package com.fulcrumgenomics.sopt.cmdline
 import com.fulcrumgenomics.commons.util.{CaptureSystemStreams, LogLevel}
 import com.fulcrumgenomics.commons.reflect.{ReflectionException, ReflectionUtil}
 import com.fulcrumgenomics.sopt.cmdline._
-import dagr.sopt._
+import com.fulcrumgenomics.sopt._
 import com.fulcrumgenomics.sopt.cmdline.ClpArgumentDefinitionPrinting._
 import com.fulcrumgenomics.sopt.util.TermCode
 import com.fulcrumgenomics.sopt.cmdline.testing.clps.{CommandLineProgramReallyLongArg, CommandLineProgramShortArg}
@@ -141,7 +141,7 @@ private case class GeneralTestingProgram
 (
   @arg(minElements = 2, maxElements = 2) var stringSet: scala.collection.Set[String] = null, // also tests if we can initialize it with a set
   @arg(minElements = 2, maxElements = 2) var intSet: scala.collection.Set[Int] = null, // also tests if we can initialize it with a set
-  @arg(flag = "i"                  )     var intArg: Int = 1, // tests short name
+  @arg(flag = 'i'                  )     var intArg: Int = 1, // tests short name
   @arg                                   var enumArg: LogLevel = LogLevel.Debug, // tests enums
   @arg                                   var stringList: List[String] = List[String](), // tests non empty??? TODO
   @arg                                   var flag: Boolean = false
@@ -314,7 +314,7 @@ private case class BadEnumClass
       |line
       |description
       |<END>
-    """",
+    """,
   group = classOf[TestGroup],
   hidden = true
 )
@@ -583,21 +583,21 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   "CommandLineProgramParser.usage" should "print out no arguments when no arguments are present" in {
-    val usage = parser(classOf[NoArguments]).usage(printCommon = false, withVersion = true, withSpecial = false)
+    val usage = parser(classOf[NoArguments]).usage(withVersion = true, withSpecial = false)
     usage should not include (RequiredArguments)
     usage should not include (OptionalArguments)
     usage should include (UsagePrefix)
   }
 
   it should "print out only optional arguments when only optional arguments are present" in {
-    val usage = parser(classOf[OptionalOnlyArguments]).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(classOf[OptionalOnlyArguments]).usage(withVersion = false, withSpecial = false)
     val reqIndex = usage.indexOf(RequiredArguments)
     reqIndex should be < 0
     usage should include (OptionalArguments)
   }
 
   it should "print out only required arguments when only required arguments are present and null default value" in {
-    val usage = parser(classOf[RequiredOnlyArguments]).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(classOf[RequiredOnlyArguments]).usage(withVersion = false, withSpecial = false)
     val reqIndex = usage.indexOf(RequiredArguments)
     reqIndex should be > 0
     usage.indexOf(OptionalArguments, reqIndex) should be < 0
@@ -608,7 +608,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     * emitted before optional ones.  Assumes both optional and required arguments are present.
     */
   def validateRequiredOptionalUsage(task: Any, printCommon: Boolean): Unit = {
-    val usage = parser(task.getClass).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(task.getClass).usage(withVersion = false, withSpecial = false)
     usage should include (RequiredArguments)
     usage should include (OptionalArguments)
     usage.indexOf(RequiredArguments) should be < usage.indexOf(OptionalArguments)
@@ -622,33 +622,33 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
 
   it should "print out an explanation of mutually exclusive arguments" in {
     val task = new MutexArguments
-    val usage = parser(task.getClass).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(task.getClass).usage(withVersion = false, withSpecial = false)
     usage should include (mutexErrorHeader)
   }
 
   it should "not print out default values with None, empty collections, or required argument when no defaults are given" in {
-    val usage = parser(classOf[NoDefaultValueStringsClass]).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(classOf[NoDefaultValueStringsClass]).usage(withVersion = false, withSpecial = false)
     usage should not include "empty"
     usage should not include "Nil"
     usage should not include "None"
   }
 
   it should "not print out default values with None, empty collections, or required argument when empty defaults are given" in {
-    val usage = parser(classOf[EmptyDefaultValueStringsClass]).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(classOf[EmptyDefaultValueStringsClass]).usage(withVersion = false, withSpecial = false)
     usage should not include "empty"
     usage should not include "Nil"
     usage should not include "None"
   }
 
   it should "print out default values with Some(x), non-empty collections, a required argument with a non-None or non-empty collection default" in {
-    val usage = parser(classOf[NonEmptyDefaultValueStringsClass]).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(classOf[NonEmptyDefaultValueStringsClass]).usage(withVersion = false, withSpecial = false)
     "abcde".foreach { c =>
       usage should include (s"unique-value-$c")
     }
   }
 
   it should "put the clp description on the next line for a really long argument name" in {
-    val usage = parser(classOf[CommandLineProgramReallyLongArg]).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(classOf[CommandLineProgramReallyLongArg]).usage(withVersion = false, withSpecial = false)
     usage
       .split("\n")
       .filter(str => str.contains("--argument"))
@@ -656,7 +656,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "pad the clp description on the same line for a short argument name" in {
-    val usage = parser(classOf[CommandLineProgramShortArg]).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(classOf[CommandLineProgramShortArg]).usage(withVersion = false, withSpecial = false)
     usage
       .split("\n")
       .filter(str => str.contains("argument"))
@@ -664,23 +664,20 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "print enum values in the  usage" in {
-    val usage = parser(classOf[GoodEnumClass]).usage(printCommon = false, withVersion = false, withSpecial = false)
+    val usage = parser(classOf[GoodEnumClass]).usage(withVersion = false, withSpecial = false)
     GoodEnum.values.foreach(e =>
       usage should include (e.name())
     )
   }
 
   it should "throw an exception when an enum has no values" in {
-    an[ReflectionException] should be thrownBy parser(classOf[BadEnumClass]).usage(printCommon = false, withVersion = false, withSpecial = false)
+    an[ReflectionException] should be thrownBy parser(classOf[BadEnumClass]).usage(withVersion = false, withSpecial = false)
   }
 
   it should "format a long description" in {
-    val usage = parser(classOf[SomeDescription]).usage(printCommon = false, withVersion = true, withSpecial = false)
-    val start = usage.indexOf("<START>")
-    val end = usage.indexOf("<END>")
-    start should be > 0
-    end should be > 0
-    usage.substring(start, end).split("\n").size shouldBe 4
+    val usage = parser(classOf[SomeDescription]).usage(withVersion = true, withSpecial = false)
+    val line  = usage.lines.find(l => l.startsWith("<START>") && l.endsWith("<END>"))
+    line.isDefined shouldBe true
   }
 
   "CommandLineProgramParser.parseAndBuild" should "parse multiple positional arguments" in {
@@ -1058,35 +1055,5 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
 
   "CommandLineProgramParser.version" should "return the version" in {
     parser(classOf[SensitiveArgTestingProgram]).version should include ("Version")
-  }
-
-  "CommandLineProgramParser.parseAndBuild" should "return None if -h is given" in {
-    val stderr: String = captureStderr(() => {
-      CommandLineProgramParser.parseAndBuild(targetClass = classOf[ClassWithInt], args = Array[String]("--an-int", "1", "-h")) shouldBe 'empty
-    })
-    stderr should include (UsagePrefix)
-  }
-
-  it should "return None if -v is given" in {
-    val stderr: String = captureStderr(() => {
-      CommandLineProgramParser.parseAndBuild(targetClass = classOf[ClassWithInt], args = Array[String]("--an-int", "1", "-v")) shouldBe 'empty
-    })
-    stderr should include ("Version")
-  }
-
-  it should "return None if illegal arguments are given" in {
-    val stderr: String = captureStderr(() => {
-      CommandLineProgramParser.parseAndBuild(targetClass = classOf[ClassWithInt], args = Array[String]("--illegal-option")) shouldBe 'empty
-    })
-    stderr.nonEmpty shouldBe true
-  }
-
-  it should "return an instance with arguments if parsing was successful" in {
-    val stderr: String = captureStderr(() => {
-      val instanceOption = CommandLineProgramParser.parseAndBuild(targetClass = classOf[ClassWithInt], args = Array[String]("--an-int", "1"))
-      instanceOption shouldBe 'defined
-      instanceOption.foreach(instance => instance.anInt shouldBe 1)
-    })
-    stderr shouldBe 'empty
   }
 }

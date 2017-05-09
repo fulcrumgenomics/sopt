@@ -23,7 +23,7 @@
  */
 package com.fulcrumgenomics.sopt.cmdline.testing.simple
 
-import dagr.sopt._
+import com.fulcrumgenomics.sopt._
 
 /** For testing the ability to find and filter classes with the CLP property */
 

@@ -28,16 +28,23 @@ import java.util
 
 import com.fulcrumgenomics.commons.reflect.ReflectionUtil
 import com.fulcrumgenomics.commons.util.StringUtil
-import com.fulcrumgenomics.sopt.util.{KCYN, KGRN}
-import com.fulcrumgenomics.sopt.util._
+import com.fulcrumgenomics.sopt.util.{KCYN, KGRN, MarkDownProcessor}
+import com.fulcrumgenomics.commons.CommonsDef._
+import com.fulcrumgenomics.sopt.Sopt
 
 import scala.util.{Failure, Success}
 
 object ClpArgumentDefinitionPrinting {
-
   /** Strings for printing enum options */
   private[cmdline] val EnumOptionDocPrefix: String = "Options: "
   private[cmdline] val EnumOptionDocSuffix: String = "."
+
+  /**  For formatting argument section of usage message. */
+  private val ArgumentColumnWidth: Int = 30
+  private val DescriptionColumnWidth: Int = Sopt.TerminalWidth - ArgumentColumnWidth
+
+  /** Markdown processor for formatting argument descriptions. */
+  private val markDownProcessor = new MarkDownProcessor(lineLength=DescriptionColumnWidth)
 
   /** Prints the usage for a given argument definition */
   private[cmdline] def printArgumentDefinitionUsage(stringBuilder: StringBuilder,
@@ -53,12 +60,17 @@ object ClpArgumentDefinitionPrinting {
 
   def mutexErrorHeader: String = " Cannot be used in conjunction with argument(s): "
 
-  /** Gets a string for the given argument definition. */
+  /**
+    * Makes the full description string for the argument (that goes into the description column
+    * in the argument usage) and contains the doc from the [[dagr.sopt.arg]] annotation along
+    * with the default value(s), list of mutually exclusive options, and in the case of enums,
+    * possible values.
+    */
   private def makeArgumentDescription(argumentDefinition: ClpArgument,
                                       argumentLookup: ClpArgumentLookup): String = {
     // a secondary map where the keys are the field names
     val sb: StringBuilder = new StringBuilder
-    if (argumentDefinition.doc.nonEmpty) sb.append(s"${argumentDefinition.doc}  ")
+    if (argumentDefinition.doc.nonEmpty) sb.append(argumentDefinition.doc).append("  ")
     if (argumentDefinition.optional) sb.append(makeDefaultValueString(argumentDefinition.defaultValue))
     sb.append(possibleValues(argumentDefinition.unitType))
 
@@ -95,33 +107,30 @@ object ClpArgumentDefinitionPrinting {
     *  c) There is a default, but it's an empty list
     *  d) There is a default, but it's an empty set
     */
-  private[cmdline] def makeDefaultValueString(value : Option[_]) : String = {
-    import scala.collection.JavaConversions.iterableAsScalaIterable
-    val v = value match {
-      case None          => ""
-      case Some(None)    => ""
-      case Some(Nil)     => ""
-      case Some(s) if Set.empty == s => ""
-      case Some(c) if c.isInstanceOf[util.Collection[_]]  => c.asInstanceOf[util.Collection[_]].mkString(", ")
-      case Some(t) if t.isInstanceOf[Traversable[_]]      => t.asInstanceOf[Traversable[_]].mkString(", ")
-      case Some(Some(x)) => x.toString
-      case Some(x)       => x.toString
-    }
-    if (v.isEmpty) "" else s"[Default: $v]. "
+  private[sopt] def makeDefaultValueString(value : Option[_]) : String = {
+    val vs = defaultValuesAsSeq(value)
+    if (vs.isEmpty) "" else s"[Default: ${vs.mkString(", ")}]."
   }
 
-  // For formatting argument section of usage message.
-  private val ArgumentColumnWidth: Int = 30
-  private val DescriptionColumnWidth: Int = 90
+  /** Returns the set of default values as a Seq of Strings, one per default value. */
+  private [sopt] def defaultValuesAsSeq(value: Option[_]): Seq[String] = value match {
+      case None | Some(None) | Some(Nil)  => Seq.empty
+      case Some(s) if Set.empty == s      => Seq.empty
+      case Some(c) if c.isInstanceOf[util.Collection[_]] => c.asInstanceOf[util.Collection[_]].iterator.map(_.toString).toSeq
+      case Some(t) if t.isInstanceOf[Traversable[_]]     => t.asInstanceOf[Traversable[_]].toSeq.map(_.toString)
+      case Some(Some(x)) => Seq(x.toString)
+      case Some(x)       => Seq(x.toString)
+    }
+
 
   /** Prints the usage for a given argument given its various elements */
-  private[cmdline] def printArgumentUsage(stringBuilder: StringBuilder, name: String, shortName: String, theType: String,
+  private[cmdline] def printArgumentUsage(stringBuilder: StringBuilder, name: String, shortName: Option[Char], theType: String,
                                           collectionArityString: Option[String], argumentDescription: String): Unit = {
     // Desired output: "-f Foo, --foo=Foo" and for Booleans, "-f [true|false] --foo=[true|false]"
     val collectionDesc = collectionArityString.getOrElse("")
     val (shortType, longType) = if (theType == "Boolean") ("[true|false]","[=true|false]") else (theType, "=" + theType)
     val label = new StringBuilder()
-    if (shortName.nonEmpty) label.append("-" + shortName + " " + shortType + collectionDesc + ", ")
+    shortName.foreach(n => label.append("-" + n + " " + shortType + collectionDesc + ", "))
     label.append("--" + name + longType + collectionDesc)
     stringBuilder.append(KGRN(label.toString()))
 
@@ -136,11 +145,12 @@ object ClpArgumentDefinitionPrinting {
     stringBuilder.append(" " * numSpaces)
 
     val wrappedDescriptionBuilder = new StringBuilder()
-    val wrappedDescription: String = StringUtil.wordWrap(argumentDescription, DescriptionColumnWidth)
-    wrappedDescription.split("\n").zipWithIndex.foreach { case (descriptionLine: String, i: Int) =>
-        if (0 < i) wrappedDescriptionBuilder.append(" " * ArgumentColumnWidth)
-      wrappedDescriptionBuilder.append(s"$descriptionLine\n")
-    }
+    val md      = this.markDownProcessor.parse(argumentDescription)
+    val padding = " " * ArgumentColumnWidth
+    val lines   = this.markDownProcessor.toText(md)
+    wrappedDescriptionBuilder.append(lines.head).append('\n')
+    lines.tail.foreach(line => wrappedDescriptionBuilder.append(padding).append(line).append('\n'))
+
     stringBuilder.append(KCYN(wrappedDescriptionBuilder.toString()))
   }
 

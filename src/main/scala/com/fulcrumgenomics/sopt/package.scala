@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package dagr
+package com.fulcrumgenomics
 
 import com.fulcrumgenomics.sopt.cmdline.{ArgAnnotation, ClpAnnotation}
 import com.fulcrumgenomics.sopt.cmdline.ClpAnnotation

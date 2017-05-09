@@ -24,9 +24,10 @@
 
 package com.fulcrumgenomics.sopt.cmdline
 
+import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.reflect.{Argument, ArgumentLookup, ReflectionUtil, ReflectiveBuilder}
 import com.fulcrumgenomics.commons.util.StringUtil
-import dagr.sopt.arg
+import com.fulcrumgenomics.sopt.arg
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -58,12 +59,9 @@ class ClpReflectiveBuilder[T](clazz: Class[T]) extends ReflectiveBuilder[T](claz
       case _ =>
         val argTypeSymbol = mirror.typeOf[ArgAnnotation] // NB: want to use `arg` here, but that just causes problems for now
 
-        // Check to see if we can find a constructor with @Arg annotations on it's parameters
+        // Check to see if we can find a constructor with @arg annotations on it's parameters
         val argOption = constructors.find(c => c.asMethod.paramLists.head.exists(p => p.annotations.exists(a => a.tree.tpe == argTypeSymbol)))
-
-        argOption.getOrElse(
-          throw new IllegalStateException("Could not find a constructor with argument annotations.")
-        ).asMethod
+        argOption.getOrElse(throw new IllegalStateException("Could not find a constructor with argument annotations.")).asMethod
     }
   }
 
@@ -88,8 +86,6 @@ class ClpReflectiveBuilder[T](clazz: Class[T]) extends ReflectiveBuilder[T](claz
   * Clp @Arg annotation.
   */
 private[sopt] class ClpArgumentLookup(args: ClpArgument*) extends ArgumentLookup[ClpArgument](args:_*) {
-  lazy private val byShortName = new mutable.HashMap[String,ClpArgument]()
-  lazy private val byLongName  = new mutable.HashMap[String,ClpArgument]()
   lazy private val byName      = new mutable.HashMap[String,ClpArgument]()
 
   /** Adds a new argument definition to the argument lookup. */
@@ -104,8 +100,6 @@ private[sopt] class ClpArgumentLookup(args: ClpArgument*) extends ArgumentLookup
 
     // Then add it to the other collections
     super.add(arg)
-    byShortName(arg.shortName)  = arg
-    byLongName(arg.longName) = arg
   }
 
   /** Returns the full set of argument names known by the lookup, including all short and long names. */
@@ -148,9 +142,8 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
   lazy val isSpecial: Boolean   = annotation.exists(_.special())
   lazy val isSensitive: Boolean = annotation.exists(_.sensitive())
   lazy val longName: String     = if (annotation.isDefined && annotation.get.name.nonEmpty) annotation.get.name else StringUtil.camelToGnu(name)
-  lazy val shortName: String    = annotation.map(_.flag()).getOrElse("")
-  lazy val doc: String          = annotation.map(_.doc().stripMargin.replace('\n', ' ').trim).getOrElse("")
-  lazy val isCommon: Boolean    = annotation.exists(_.common())
+  lazy val shortName: Option[Char] = annotation.flatMap(a => if (a.flag() > 0) Some(a.flag()) else None)
+  lazy val doc: String          = annotation.map(_.doc().stripMargin.trim).getOrElse("")
   lazy val minElements: Int     = if (isCollection) {
     annotation.map(_.minElements).getOrElse(1)
   } else {
@@ -189,14 +182,13 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
   /** Gets the list of names by which this option can be passed on the command line. Will be length 1 or 2. */
   def names: List[String] = {
     val names: ListBuffer[String] = new ListBuffer[String]()
-    if (!shortName.isEmpty) names += shortName
+    shortName.foreach(n => names += n.toString)
     if (!longName.isEmpty)  names += longName
     names.toList
   }
 
   /** Utility class to hold the various collection types: [[Seq]], [[Set]], and [[java.util.Collection]] */
   private class SomeCollection(input: Any) {
-    import scala.collection.JavaConversions._
     import scala.collection.{Seq, Set}
 
     private var seq: Option[Seq[_]] = None

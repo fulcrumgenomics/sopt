@@ -53,10 +53,10 @@ public @interface ArgAnnotation {
     /**
      * Specified short name of the command.  Short names should be prefixed
      * with a single dash.  ArgAnnotation values can directly abut single-char
-     * short names or be separated from them by a space.
-     * @return Selected short name, or "" for none.
+     * flags or be separated from them by a space.
+     * @return Selected short name, or 0 for none.
      */
-    String flag() default "";
+    char flag() default 0;
 
     /**
      * Documentation for the command-line argument.  Should appear when the
@@ -73,12 +73,6 @@ public @interface ArgAnnotation {
      * neither are specified.
      */
     String[] mutex() default {};
-
-    /**
-     * Is this an Option common to all command line programs.  If it is then it will only
-     * be displayed in usage info when H or STDHELP is used to display usage.
-     */
-    boolean common() default false;
 
     /**
      * Does this option have special treatment in the argument parsing system.
@@ -104,5 +98,4 @@ public @interface ArgAnnotation {
      * for non-collection arguments.
      * */
     int maxElements() default Integer.MAX_VALUE;
-
 }

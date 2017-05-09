@@ -23,14 +23,14 @@
  */
 package com.fulcrumgenomics.sopt.cmdline
 
-import dagr.sopt._
+import com.fulcrumgenomics.sopt._
 
 /**
   * This collection is for arguments that require special treatment by the arguments parser itself.
   * It should not grow beyond a very short list.
   */
 private[cmdline] final case class SpecialArgumentsCollection(
-  @arg(flag = "h", name = "help", doc = "Display the help message.", special = true)
+  @arg(flag = 'h', name = "help", doc = "Display the help message.", special = true)
   var help: Boolean = false,
   @arg(name = "version", doc = "Display the version number for this tool.", special = true)
   var version: Boolean = false

@@ -23,7 +23,6 @@
  */
 package com.fulcrumgenomics.sopt.cmdline
 
-import com.fulcrumgenomics.sopt.cmdline.ClpGroup
 import com.fulcrumgenomics.sopt.util.UnitSpec
 
 class ClpsGroupOne extends ClpGroup {

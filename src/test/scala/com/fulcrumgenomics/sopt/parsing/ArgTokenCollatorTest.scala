@@ -24,7 +24,6 @@
 
 package com.fulcrumgenomics.sopt.parsing
 
-import com.fulcrumgenomics.sopt.parsing.{ArgOptionAndValues, ArgTokenCollator, ArgTokenizer, OptionNameException}
 import com.fulcrumgenomics.sopt.parsing.ArgTokenizer.{ArgOption, ArgOptionAndValue, ArgValue}
 import com.fulcrumgenomics.sopt.util.UnitSpec
 

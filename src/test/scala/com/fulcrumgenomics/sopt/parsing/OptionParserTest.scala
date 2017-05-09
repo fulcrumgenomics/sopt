@@ -24,7 +24,6 @@
 
 package com.fulcrumgenomics.sopt.parsing
 
-import com.fulcrumgenomics.sopt.parsing.{IllegalFlagValueException, IllegalOptionNameException, OptionNameException, OptionParser}
 import com.fulcrumgenomics.sopt.util.UnitSpec
 import org.scalatest.PrivateMethodTester
 

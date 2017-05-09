@@ -27,7 +27,8 @@ package com.fulcrumgenomics.sopt.parsing
 import java.nio.file.{Files, Paths}
 import java.util.NoSuchElementException
 
-import scala.collection.JavaConversions._
+import com.fulcrumgenomics.commons.CommonsDef._
+
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 

@@ -27,11 +27,10 @@ import java.io.IOException
 
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.util.LazyLogging
+import com.fulcrumgenomics.sopt.Sopt
 import com.fulcrumgenomics.sopt.parsing.{OptionParser, OptionParsingException}
-import com.fulcrumgenomics.sopt.util.{KBLDRED, KCYN, KRED, KWHT}
-import com.fulcrumgenomics.sopt.parsing.OptionParsingException
 import com.fulcrumgenomics.sopt.util.ParsingUtil._
-import com.fulcrumgenomics.sopt.util._
+import com.fulcrumgenomics.sopt.util.{KBLDRED, KCYN, KRED, KWHT, _}
 
 import scala.util.{Failure, Success, Try}
 
@@ -57,47 +56,22 @@ object CommandLineProgramParserStrings {
   }
 
   def lineBreak(color: Boolean = true): String = {
-    val v = s"--------------------------------------------------------------------------------------\n"
+    val v = "-" * Sopt.TerminalWidth + "\n"
     if (color) KWHT(v) else v
-  }
-}
-
-object CommandLineProgramParser {
-
-  /** Attempts to build an instance of the target class from the given arguments.
-    *
-    * It will print a usage message if the help argument is given, or print the version if the version argument is given.
-    * If an error is encountered, it will print the usage message as well as the error message.
-    *
-    * @param targetClass the class with annotated constructor parameters.
-    * @param args the arguments.
-    * @tparam T the type of the target class, usually inferred.
-    * @return None if not successful, otherwise an instance of [[T]].
-    */
-  def parseAndBuild[T](targetClass: Class[T], args: Array[String]): Option[T] = {
-    val print : (String => Unit) = System.err.println
-    val parser = new CommandLineProgramParser(targetClass=targetClass)
-
-    parser.parseAndBuild(args=args) match {
-      case ParseSuccess() =>
-      case ParseHelp() => print(parser.usage())
-      case ParseVersion() => print(parser.version)
-      case ParseFailure(ex, remaining) => print(s"${parser.usage()}\n${parser.wrapError(ex.getMessage)}")
-    }
-    parser.instance
   }
 }
 
 /** Class for parsing the command line for a single command line program.
   *
   * The main entry point is [[parseAndBuild()]].  The arguments given to this method should match the annotated
-  * arguments to the program's constructor.  Constructor arguments can be annotated with [[dagr.sopt.arg]] while
-  * constructors themselves can be annotated with [[dagr.sopt.clp]].  The latter may be omitted, but is useful for
-  * grouping related command line programs and having a common description.
+  * arguments to the program's constructor.  Constructor arguments can be annotated with [[com.fulcrumgenomics.sopt.arg]]
+  * while constructors themselves can be annotated with [[com.fulcrumgenomics.sopt.clp]].  The latter may be omitted,
+  * but is useful for grouping related command line programs and having a common description.
   */
-class CommandLineProgramParser[T](val targetClass: Class[T]) extends CommandLineParserStrings with LazyLogging {
+class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialArgs: Boolean = true) extends CommandLineParserStrings with LazyLogging {
   import CommandLineProgramParserStrings._
 
+  private val markdownProcessor = new MarkDownProcessor(lineLength=Sopt.TerminalWidth)
   override def commandLineName: String = targetClass.getSimpleName
 
   val argumentLookup: ClpArgumentLookup = new ClpArgumentLookup()
@@ -110,7 +84,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T]) extends CommandLine
   private var specialArguments : Option[SpecialArgumentsCollection] = None
 
   // Actual constructor code here!
-  createArgumentDefinitions(classOf[SpecialArgumentsCollection], this.argumentLookup)
+  if (includeSpecialArgs) createArgumentDefinitions(classOf[SpecialArgumentsCollection], this.argumentLookup)
   createArgumentDefinitions(targetClass, this.argumentLookup)
 
   protected def targetName: String = targetClass.getSimpleName
@@ -153,7 +127,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T]) extends CommandLine
     * @param args the args to parse.
     * @return an instance of the class [[T]] if we successfully parsed the args, false otherwise
     */
-  def parseAndBuild(args: Array[String]): ParseResult = {
+  def parseAndBuild(args: Seq[String]): ParseResult = {
     // Try parsing the arguments
     parseArgs(args=args) match {
       case ParseFailure(ex, remaining) => ParseFailure(ex, remaining)
@@ -186,7 +160,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T]) extends CommandLine
     * Attempts to parse the command line recursively, by parsing the arguments in the args array, loading any arguments files
     * indicated, and then repeating again for each file.
     */
-  private def parseArgs(args: Array[String]): ParseResult = {
+  private def parseArgs(args: Seq[String]): ParseResult = {
     val parser: OptionParser = new OptionParser(argFilePrefix=Some("@"))
 
     try {
@@ -234,7 +208,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T]) extends CommandLine
   /**
     * Print a usage message for a given command line task.
     */
-  def usage(printCommon: Boolean = true, withVersion: Boolean = true, withSpecial: Boolean = true): String = {
+  def usage(withVersion: Boolean = true, withSpecial: Boolean = true): String = {
     val builder = new StringBuilder()
 
     builder.append(s"$standardUsagePreamble")
@@ -250,7 +224,6 @@ class CommandLineProgramParser[T](val targetClass: Class[T]) extends CommandLine
     // filter on common and partition on optional
     val (required, optional) = argumentLookup.view
       .filterNot { _.hidden }
-      .filter { printCommon || !_.isCommon }
       .filter { withSpecial || !_.isSpecial }
       .partition { !_.optional }
 
@@ -275,10 +248,9 @@ class CommandLineProgramParser[T](val targetClass: Class[T]) extends CommandLine
 
   /** add extra whitespace after newlines for pipeline descriptions*/
   private def formatLongDescription(description: String): String = {
-    val desc = description.stripMargin.trim()
-    desc
-      .dropWhile(_ == '\n')
-      .dropRight(1) + desc.lastOption.getOrElse("")
+    val desc = description.stripMargin
+    val doc  = this.markdownProcessor.parse(desc)
+    this.markdownProcessor.toText(doc).mkString("\n")
   }
 
   /** Gets the command line assuming `parseTasks` has been called */

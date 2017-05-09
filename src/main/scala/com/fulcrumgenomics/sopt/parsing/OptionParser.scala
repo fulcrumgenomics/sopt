@@ -24,7 +24,7 @@
 
 package com.fulcrumgenomics.sopt.parsing
 
-import dagr.sopt._
+import com.fulcrumgenomics.sopt._
 
 import scala.collection.Traversable
 import scala.util.{Failure, Success, Try}

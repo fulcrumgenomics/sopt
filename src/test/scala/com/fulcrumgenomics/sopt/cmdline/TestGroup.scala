@@ -23,8 +23,6 @@
  */
 package com.fulcrumgenomics.sopt.cmdline
 
-import com.fulcrumgenomics.sopt.cmdline.ClpGroup
-
 class TestGroup extends ClpGroup {
   val name: String = "Testing"
   val description: String = "Testing"

@@ -26,12 +26,12 @@ package com.fulcrumgenomics.sopt.util
 
 import java.lang.reflect.Modifier
 
+import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.reflect.ReflectionUtil
 import com.fulcrumgenomics.commons.util.{ClassFinder, StringUtil}
 import com.fulcrumgenomics.sopt.cmdline.CommandLineException
-import dagr.sopt.clp
+import com.fulcrumgenomics.sopt.clp
 
-import scala.collection.JavaConversions._
 import scala.collection.immutable.Map
 import scala.collection.mutable
 import scala.reflect._
@@ -111,7 +111,7 @@ object ParsingUtil {
     }
 
     classToAnnotationMapFromSourceClasses[T](
-      srcClasses = classFinder.getClasses,
+      srcClasses = classFinder.getClasses.toTraversable,
       omitSubClassesOf = omitSubClassesOf,
       includeHidden = includeHidden)
   }

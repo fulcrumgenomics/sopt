@@ -26,7 +26,7 @@ package com.fulcrumgenomics.sopt.parsing
 
 import java.nio.file.Files
 
-import com.fulcrumgenomics.sopt.parsing.{ArgTokenizer, OptionNameException}
+import com.fulcrumgenomics.commons.io.Io
 import com.fulcrumgenomics.sopt.util.UnitSpec
 
 import scala.util.{Failure, Success}
@@ -36,10 +36,9 @@ class ArgTokenizerTest extends UnitSpec {
 
   /** Creates a temporary directory, writes the lines to it, then returns the path as a String. */
   private def writeTmpArgFile(lines: Seq[String]) : String = {
-    import scala.collection.JavaConversions.asJavaIterable
     val tmp = Files.createTempFile("args.", ".txt")
-    Files.write(tmp, lines)
     tmp.toFile.deleteOnExit()
+    Io.writeLines(tmp, lines)
     tmp.toAbsolutePath.toString
   }
 
