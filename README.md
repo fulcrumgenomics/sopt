@@ -88,7 +88,7 @@ object Main {
 
 The `Tool` trait is not required, but it is generally useful to have a trait which is implemented by all commands, so that not only can they have a common method (ex. `execute()`) that can be invoked to _do something_, the available commands can be found using the `Tool` trait and `Sopt.find`.  Alternatively you could invoke `Sopt.parseCommand[AnyRef]` directly!  To do so, you would need to manually construct the list of commands instead of searching for subclasses with `Sopt.find[AnyRef](packages)`.
 
-In this example, the `Main` class is implemented only once and acts as a dispatcher to any number of commands that implement `Tool`.  It also acts as a central point to add consistent behaviour amongst tools, for example printing out the date and time at the start and end of execution.
+In this example, the `Main` class is implemented only once and can act as a dispatcher to any number of commands that implement `Tool`.  It also acts as a central point to add consistent behaviour amongst tools, for example printing out the date and time at the start and end of execution.
 
 Running the `Main` class from the command line yields the following output:
 
