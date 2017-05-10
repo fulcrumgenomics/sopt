@@ -2,6 +2,7 @@ package com.fulcrumgenomics.sopt
 
 import java.nio.file.Path
 
+import com.fulcrumgenomics.sopt.Sopt.Group
 import com.fulcrumgenomics.sopt.SoptTest.{FancyPath, PositiveInt}
 import com.fulcrumgenomics.sopt.cmdline.Clps
 import com.fulcrumgenomics.sopt.util.UnitSpec
@@ -42,7 +43,7 @@ class SoptTest extends UnitSpec {
   "Sopt.inspect" should "return useful and correct metadata for SoptCommand1" in {
     val clp = Sopt.inspect(classOf[SoptCommand1])
     clp.name              shouldBe "SoptCommand1"
-    clp.group             shouldBe new Clps().name
+    clp.group             shouldBe Group(new Clps().name, new Clps().description, new Clps().rank)
     clp.description       shouldBe "A _first_ test program for Sopt."
     clp.descriptionAsText shouldBe "A first test program for Sopt."
     clp.descriptionAsHtml shouldBe "<p>A <em>first</em> test program for Sopt.</p>"
@@ -87,7 +88,7 @@ class SoptTest extends UnitSpec {
   "Sopt.inspect" should "return useful and correct metadata for SoptCommand2" in {
     val clp = Sopt.inspect(classOf[SoptCommand2])
     clp.name              shouldBe "SoptCommand2"
-    clp.group             shouldBe new Clps().name
+    clp.group             shouldBe Group(new Clps().name, new Clps().description, new Clps().rank)
     clp.description       shouldBe "A second test program for Sopt."
     clp.descriptionAsText shouldBe "A second test program for Sopt."
     clp.descriptionAsHtml shouldBe "<p>A second test program for Sopt.</p>"

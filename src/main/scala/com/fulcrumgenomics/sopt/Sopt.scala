@@ -1,6 +1,6 @@
 package com.fulcrumgenomics.sopt
 
-import com.fulcrumgenomics.sopt.cmdline.{ClpArgumentDefinitionPrinting, CommandLineParser, CommandLineProgramParser}
+import com.fulcrumgenomics.sopt.cmdline.{ClpArgumentDefinitionPrinting, ClpGroup, CommandLineParser, CommandLineProgramParser}
 import com.fulcrumgenomics.sopt.util.{MarkDownProcessor, ParsingUtil}
 import com.sun.org.apache.xpath.internal.Arg
 
@@ -38,6 +38,9 @@ object Sopt {
     def descriptionAsHtml: String = markDownProcessor.toHtml(markDownProcessor.parse(description))
   }
   
+  /** Represents the group to which command line programs belong. */
+  case class Group(name: String, description: String, override val rank: Int) extends ClpGroup
+  
   /**
     * Represents the metadata about a command line program that may be consumed externally to generate
     * documentation etc.
@@ -49,7 +52,7 @@ object Sopt {
     * @param args the ordered [[Seq]] of arguments the program takes
     */
   case class ClpMetadata(name: String,
-                         group: String,
+                         group: Group,
                          hidden: Boolean,
                          description: String,
                          args: Seq[Arg]
@@ -108,10 +111,12 @@ object Sopt {
       sensitive     = a.isSensitive,
       description   = a.doc
     ))
+    
+    val group = clpAnn.group().newInstance()
 
     ClpMetadata(
       name            = clp.getSimpleName,
-      group           = clpAnn.group().getSimpleName,
+      group           = Group(name=group.name, description=group.description, rank=group.rank),
       hidden          = clpAnn.hidden(),
       description     = clpAnn.description().stripMargin.trim().dropWhile(_ == '\n'),
       args            = args
