@@ -53,8 +53,8 @@ class MarkDownProcessorTest extends UnitSpec {
   }
 
   it should "remove inline formatting characters and re-wrap appropriately" in {
-    val markdown = "This _is_ some text that is **over** `80` chars *long* with formatting but fits without."
-    val expected = "This is some text that is over 80 chars long with formatting but fits without."
+    val markdown = "This _is_ some text that's **over** `80` chars *long* with formatting but fits without."
+    val expected = "This is some text that's over '80' chars long with formatting but fits without."
     toText(markdown) shouldBe expected
   }
 
