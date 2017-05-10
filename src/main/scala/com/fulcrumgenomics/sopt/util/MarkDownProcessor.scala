@@ -135,6 +135,8 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
       Seq(Chunk.wrappable(indent, text).withPrefix("> ")) ++ EmptyChunk
     case link: Link =>
       Seq(Chunk.wrappable(indent, s"${link.getText} (${link.getUrl})"))
+    case code: Code =>
+      Seq(Chunk.wrappable(indent, s"'${code.getText}'"))
     case delimited: DelimitedNodeImpl =>
       Seq(Chunk.wrappable(indent, delimited.getText.toString))
     case text : Text =>
