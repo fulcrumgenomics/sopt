@@ -31,6 +31,12 @@ import com.fulcrumgenomics.sopt.util.TermCode
 import com.fulcrumgenomics.sopt.util.UnitSpec
 import org.scalatest.BeforeAndAfterAll
 
+// Sealed case class hierarchy for testing possibleValues()
+sealed trait Foo
+case object Hi extends Foo
+case object Lo extends Foo
+case object Whee extends Foo
+
 /**
   * Tests for ClpArgumentDefinitionPrinting.
   */
@@ -80,5 +86,9 @@ class ClpArgumentDefinitionPrintingTest extends UnitSpec with BeforeAndAfterAll 
     printArgumentUsage(longName, None     , theType,   None,           description).startsWith(s"--$longName=$theType") shouldBe true
     printArgumentUsage(longName, shortName, theType,   Some("+"),      description).startsWith(s"-${shortName.get} $theType+, --$longName=$theType+") shouldBe true
     printArgumentUsage(longName, shortName, theType,   Some("{0,20}"), description).startsWith(s"-${shortName.get} $theType{0,20}, --$longName=$theType{0,20}") shouldBe true
+  }
+
+  "ClpArgumentDefinitionPrinting.possibleValues" should "find the possible values in a sealed trait/case object hierarchy" in {
+    ClpArgumentDefinitionPrinting.possibleValues(classOf[Foo]) shouldBe "Options: Hi, Lo, Whee."
   }
 }
