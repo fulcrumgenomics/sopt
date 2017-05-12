@@ -62,7 +62,7 @@ object ClpArgumentDefinitionPrinting {
 
   /**
     * Makes the full description string for the argument (that goes into the description column
-    * in the argument usage) and contains the doc from the [[dagr.sopt.arg]] annotation along
+    * in the argument usage) and contains the doc from the [[com.fulcrumgenomics.sopt.arg]] annotation along
     * with the default value(s), list of mutually exclusive options, and in the case of enums,
     * possible values.
     */
@@ -72,7 +72,8 @@ object ClpArgumentDefinitionPrinting {
     val sb: StringBuilder = new StringBuilder
     if (argumentDefinition.doc.nonEmpty) sb.append(argumentDefinition.doc).append("  ")
     if (argumentDefinition.optional) sb.append(makeDefaultValueString(argumentDefinition.defaultValue))
-    sb.append(possibleValues(argumentDefinition.unitType))
+    val possibles = possibleValues(argumentDefinition.unitType)
+    if (possibles.nonEmpty) sb.append(" ").append(possibles)
 
     if (argumentDefinition.mutuallyExclusive.nonEmpty) {
       sb.append(mutexErrorHeader)
@@ -158,14 +159,14 @@ object ClpArgumentDefinitionPrinting {
     * Returns the help string with details about valid options for the given argument class.
     *
     * <p>
-    * Currently this only make sense with [[Boolean]] and [[Enumeration]]. Any other class
-    * will result in an empty string.
+    * Currently this only make sense with [[Enumeration]] and sealed trait hierarchies.
+    * Any other class will result in an empty string.
     * </p>
     *
     * @param clazz the target argument's class.
     * @return never { @code null}.
     */
-  private def possibleValues(clazz: Class[_]): String = {
+  private[cmdline] def possibleValues(clazz: Class[_]): String = {
     if (clazz.isEnum) {
       val enumClass: Class[_ <: Enum[_ <: Enum[_]]] = clazz.asInstanceOf[Class[_ <: Enum[_ <: Enum[_]]]]
       val enumConstants = ReflectionUtil.enumOptions(enumClass) match {
@@ -174,6 +175,14 @@ object ClpArgumentDefinitionPrinting {
       }
       enumConstants.map(_.name).mkString(EnumOptionDocPrefix, ", ", EnumOptionDocSuffix)
     }
-    else ""
+    else {
+      val symbol = scala.reflect.runtime.currentMirror.classSymbol(clazz)
+      if (symbol.isTrait && symbol.isSealed) {
+        symbol.knownDirectSubclasses.map(_.name.toString).mkString(EnumOptionDocPrefix, ", ", EnumOptionDocSuffix)
+      }
+      else {
+        ""
+      }
+    }
   }
 }
