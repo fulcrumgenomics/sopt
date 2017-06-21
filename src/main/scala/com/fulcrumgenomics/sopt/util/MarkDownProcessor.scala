@@ -164,6 +164,7 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
       while (words.hasNext) {
         val buffer = new StringBuilder
         buffer.append(chunk.prefix)
+        buffer.append(words.next()).append(" ") // always append at least one word, even if it's too long
         while (words.hasNext && buffer.length + words.head.length < length) buffer.append(words.next()).append(" ")
         val prefix = if (lines.isEmpty) indent else gutter
         lines.append(prefix + buffer.toString().trim)
