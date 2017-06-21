@@ -165,6 +165,18 @@ class MarkDownProcessorTest extends UnitSpec {
     val actual = proc.toText(proc.parse(markdown)).mkString("\n")
     actual shouldBe expected
   }
+
+  it should "handle markdown with words longer than line length" in {
+    val proc = new MarkDownProcessor(lineLength=40, indentSize=4)
+    val markdown =
+      """
+        |This is a line.
+        |ThisIsALineWithNoSpacesThatIsFarTooLongButShouldStillBeEmittedOnASingleLineAndNotFail
+        |This is another line.
+      """.trim.stripMargin
+
+    proc.toText(proc.parse(markdown)) shouldBe markdown.lines.toSeq
+  }
   
   "MarkDownProcessor.toHtml" should "convert markdown to HTML" in {
     val markdown =
