@@ -9,7 +9,7 @@
 
 # sopt - Scala Option Parsing Library
 
-_sopt_ is a scala library for command line option parsing with minimal dependencies.  It is designed for toolkits that have multiple "commands" such as [dagr](https://github.com/fulcrumgenomics/dagr) and [fgbio](https://github.com/fulcrumgenomics/fgbio).  The latest API documentation can be found on [here](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.12).
+_sopt_ is a scala library for command line option parsing with minimal dependencies.  It is designed for toolkits that have multiple "commands" such as [dagr](https://github.com/fulcrumgenomics/dagr) and [fgbio](https://github.com/fulcrumgenomics/fgbio).  The latest API documentation can be found [here](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.12).
 
 It has the following high level features:
 
