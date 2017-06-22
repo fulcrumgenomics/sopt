@@ -3,12 +3,13 @@
 [![Code Review](https://api.codacy.com/project/badge/grade/52e1d786d9784c7192fae2f8e853fa34)](https://www.codacy.com/app/contact_32/sopt)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fulcrumgenomics/sopt_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fulcrumgenomics/sopt_2.12)
 [![Dependency Status](https://www.versioneye.com/user/projects/59125dc57f100d005fb14a49/badge.svg)](https://www.versioneye.com/user/projects/59125dc57f100d005fb14a49)
+[![Javadocs](http://javadoc.io/badge/com.fulcrumgenomics/sopt_2.12.svg)](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.12)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/fulcrumgenomics/sopt/blob/master/LICENSE)
 [![Language](http://img.shields.io/badge/language-scala-brightgreen.svg)](http://www.scala-lang.org/)
 
 # sopt - Scala Option Parsing Library
 
-_sopt_ is a scala library for command line option parsing with minimal dependencies.  It is designed for toolkits that have multiple "commands" such as [dagr](https://github.com/fulcrumgenomics/dagr) and [fgbio](https://github.com/fulcrumgenomics/fgbio).
+_sopt_ is a scala library for command line option parsing with minimal dependencies.  It is designed for toolkits that have multiple "commands" such as [dagr](https://github.com/fulcrumgenomics/dagr) and [fgbio](https://github.com/fulcrumgenomics/fgbio).  The latest API documentation can be found on [here](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.12).
 
 It has the following high level features:
 
