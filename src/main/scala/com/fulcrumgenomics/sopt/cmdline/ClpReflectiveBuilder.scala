@@ -93,7 +93,7 @@ private[sopt] class ClpArgumentLookup(args: ClpArgument*) extends ArgumentLookup
     // First iterate over the names and ensure that none are taken yet
     arg.names.foreach { name =>
       byName.get(name) foreach { n =>
-        throw new CommandLineParserInternalException(s"$name has already been used.  Conflicting arguments are: '${arg.name}' and '${n.name}'")
+        throw CommandLineParserInternalException(s"$name has already been used.  Conflicting arguments are: '${arg.name}' and '${n.name}'")
       }
       byName(name) = arg
     }
@@ -154,6 +154,7 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
   } else {
     throw new IllegalStateException("Calling maxElements on an argument that is not a collection.")
   }
+  lazy val groupName: Option[String] = annotation.map(_.group()).filter(_.nonEmpty)
 
   /** Returns true if the type of the argument is boolean, and can thus be treated as a flag on the command line. */
   def isFlag: Boolean = argumentType == classOf[java.lang.Boolean] || argumentType == classOf[Boolean]
@@ -165,14 +166,14 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
   @SuppressWarnings(Array("unchecked"))
   def setArgument(values: String*) : Unit = {
     if (isSetByUser) throw new IllegalStateException(s"Argument '$name' has already been set")
-    if (!isCollection && values.size > 1) throw new UserException(s"Argument '${this.names}' cannot be specified more than once.")
+    if (!isCollection && values.size > 1) throw UserException(s"Argument '${this.names}' cannot be specified more than once.")
 
     if (isFlag && values.isEmpty) this.value = true
     else this.value = {
       ReflectionUtil.constructFromString(this.argumentType, this.unitType, values: _*) match {
         case Success(v) => v
         case Failure(ex: Exception) => throw new BadArgumentValue(msg="Argument could not be constructed from string", e=ex)
-        case Failure(thr) => throw new BadArgumentValue(thr.getMessage)
+        case Failure(thr) => throw BadArgumentValue(thr.getMessage)
       }
     }
 
@@ -223,14 +224,14 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
     val fullName: String = this.longName
     val c: SomeCollection = new SomeCollection(this.value.getOrElse(Nil))
     if (c.isEmpty) {
-      throw new MissingArgumentException(s"Argument '$fullName' must be specified at least once.")
+      throw MissingArgumentException(s"Argument '$fullName' must be specified at least once.")
     }
     if (this.isCollection) {
       if (c.size < this.minElements) {
-        throw new UserException(s"Argument '$fullName' was specified too few times (${c.size} < ${this.minElements})")
+        throw UserException(s"Argument '$fullName' was specified too few times (${c.size} < ${this.minElements})")
       }
       else if (this.maxElements < c.size) {
-        throw new UserException(s"Argument '$fullName' was specified too many times (${this.minElements} < ${c.size})")
+        throw UserException(s"Argument '$fullName' was specified too many times (${this.minElements} < ${c.size})")
       }
     }
   }
@@ -244,7 +245,7 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
     */
   private def prettyNameValue(value: Any): String = {
     Option(value) match {
-      case Some(v) if isSensitive  => f"--$longName ***********"
+      case Some(_) if isSensitive  => f"--$longName ***********"
       case Some(Some(optionValue)) => prettyNameValue(optionValue)
       case Some(None)              => f"--$longName ${ReflectionUtil.SpecialEmptyOrNoneToken}"
       case Some(v)                 => f"--$longName $v"

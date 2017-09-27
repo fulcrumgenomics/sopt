@@ -63,7 +63,7 @@ public @interface ArgAnnotation {
      * --help argument is specified.
      * @return Doc string associated with this command-line argument.
      */
-    String doc() default "Undocumented option";
+    String doc() default "Undocumented option.";
 
     /**
      * Array of option names that cannot be used in conjunction with this one.
@@ -98,4 +98,11 @@ public @interface ArgAnnotation {
      * for non-collection arguments.
      * */
     int maxElements() default Integer.MAX_VALUE;
+
+    /**
+     * The named group to which the command-line argument.  The group name can be any string, and the associated
+     * command-line arguments will be displayed in the help in a separate section from those without a group name (the
+     * empty string).
+     */
+    String group() default "";
 }

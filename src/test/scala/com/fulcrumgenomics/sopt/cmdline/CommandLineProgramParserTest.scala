@@ -32,6 +32,7 @@ import com.fulcrumgenomics.sopt.util.TermCode
 import com.fulcrumgenomics.sopt.cmdline.testing.clps.{CommandLineProgramReallyLongArg, CommandLineProgramShortArg}
 import com.fulcrumgenomics.sopt.util.UnitSpec
 import org.scalatest.{BeforeAndAfterAll, Inside, OptionValues}
+import com.fulcrumgenomics.sopt.cmdline.ClpArgumentDefinitionPrinting.ArgumentDefaultValuePrefix
 
 import scala.collection.Map
 import scala.collection.immutable.HashMap
@@ -320,6 +321,19 @@ private case class BadEnumClass
 )
 private case class SomeDescription (@arg var a: Int = 2)
 
+@clp(description = "", group = classOf[TestGroup], hidden = true)
+private case class SingleArgWithGroupName (@arg(group="Group") a: Int)
+
+@clp(description = "", group = classOf[TestGroup], hidden = true)
+private case class MultipleGroupNames
+(
+  @arg(group="1") oneRequired: Int,
+  @arg(group="1") oneOptional: Option[Int] = None,
+  @arg(group="2") twoRequired: Int,
+  @arg(group="3") threeOptional: Int = 1,
+  @arg noGroup: Int = 3
+)
+
 ////////////////////////////////////////////////////////////////////////////////
 // End of Testing CLP classes
 ////////////////////////////////////////////////////////////////////////////////
@@ -583,21 +597,21 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   "CommandLineProgramParser.usage" should "print out no arguments when no arguments are present" in {
-    val usage = parser(classOf[NoArguments]).usage(withVersion = true, withSpecial = false)
+    val usage = parser(classOf[NoArguments]).usageWithSections(withVersion = true, withSpecial = false, withSections = true)
     usage should not include (RequiredArguments)
     usage should not include (OptionalArguments)
     usage should include (UsagePrefix)
   }
 
   it should "print out only optional arguments when only optional arguments are present" in {
-    val usage = parser(classOf[OptionalOnlyArguments]).usage(withVersion = false, withSpecial = false)
+    val usage = parser(classOf[OptionalOnlyArguments]).usageWithSections(withVersion = true, withSpecial = false, withSections = true)
     val reqIndex = usage.indexOf(RequiredArguments)
     reqIndex should be < 0
     usage should include (OptionalArguments)
   }
 
   it should "print out only required arguments when only required arguments are present and null default value" in {
-    val usage = parser(classOf[RequiredOnlyArguments]).usage(withVersion = false, withSpecial = false)
+    val usage = parser(classOf[RequiredOnlyArguments]).usageWithSections(withVersion = true, withSpecial = false, withSections = true)
     val reqIndex = usage.indexOf(RequiredArguments)
     reqIndex should be > 0
     usage.indexOf(OptionalArguments, reqIndex) should be < 0
@@ -608,7 +622,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     * emitted before optional ones.  Assumes both optional and required arguments are present.
     */
   def validateRequiredOptionalUsage(task: Any, printCommon: Boolean): Unit = {
-    val usage = parser(task.getClass).usage(withVersion = false, withSpecial = false)
+    val usage = parser(task.getClass).usageWithSections(withVersion = true, withSpecial = false, withSections = true)
     usage should include (RequiredArguments)
     usage should include (OptionalArguments)
     usage.indexOf(RequiredArguments) should be < usage.indexOf(OptionalArguments)
@@ -678,6 +692,37 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val usage = parser(classOf[SomeDescription]).usage(withVersion = true, withSpecial = false)
     val line  = usage.lines.find(l => l.startsWith("<START>") && l.endsWith("<END>"))
     line.isDefined shouldBe true
+  }
+
+  it should "print a usage with all arguments in a named group" in {
+    val usage = parser(classOf[SingleArgWithGroupName]).usageWithSections(withVersion = true, withSpecial = false, withSections = true)
+    usage should include ("(Group) " + RequiredArguments)
+    usage should not include OptionalArguments
+  }
+
+  it should "print a usage with multiple argument groups, including the null group" in {
+    val usage = parser(classOf[MultipleGroupNames]).usageWithSections(withVersion = true, withSpecial = false, withSections = true)
+
+    val defaultRequiredIndex = usage.indexOf("MultipleGroupNames " + RequiredArguments)
+    val defaultOptionalIndex = usage.indexOf("MultipleGroupNames " + OptionalArguments)
+    val oneRequiredIndex     = usage.indexOf("(1) " + RequiredArguments)
+    val oneOptionalIndex     = usage.indexOf("(1) " + OptionalArguments)
+    val twoRequiredIndex     = usage.indexOf("(2) " + RequiredArguments)
+    val twoOptionalIndex     = usage.indexOf("(2) " + OptionalArguments)
+    val threeRequiredIndex   = usage.indexOf("(3) " + RequiredArguments)
+    val threeOptionalIndex   = usage.indexOf("(3) " + OptionalArguments)
+
+    // Check that these sections do not exist
+    Seq(defaultRequiredIndex, twoOptionalIndex, threeRequiredIndex).foreach { index => index shouldBe -1 }
+
+    // Check that these sections exist, and are found in the given order
+    Seq(oneRequiredIndex, oneOptionalIndex, twoRequiredIndex, threeOptionalIndex, defaultOptionalIndex)
+      .sliding(2)
+      .foreach { case Seq(leftIndex, rightIndex) =>
+        leftIndex should be >= (-1)
+        rightIndex should be >= (-1)
+        leftIndex should be < rightIndex
+      }
   }
 
   "CommandLineProgramParser.parseAndBuild" should "parse multiple positional arguments" in {

@@ -33,6 +33,7 @@ import com.fulcrumgenomics.sopt.util.ParsingUtil._
 import com.fulcrumgenomics.sopt.util.{KBLDRED, KCYN, KRED, KWHT, _}
 
 import scala.util.{Failure, Success, Try}
+import scala.collection.mutable
 
 /** Stores strings used in the usage and error messages */
 object CommandLineProgramParserStrings {
@@ -59,6 +60,9 @@ object CommandLineProgramParserStrings {
     val v = "-" * Sopt.TerminalWidth + "\n"
     if (color) KWHT(v) else v
   }
+
+  /** Used to explicitly print required and optional sections to aid in testing. */
+  private[cmdline] var IncludeRequiredAndOptionalSections: Boolean = false
 }
 
 /** Class for parsing the command line for a single command line program.
@@ -207,8 +211,23 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
 
   /**
     * Print a usage message for a given command line task.
-    */
+    *
+    * @param withVersion include the version in the standard preamble.
+    * @param withSpecial include command line arguments marked as special.
+    **/
   def usage(withVersion: Boolean = true, withSpecial: Boolean = true): String = {
+    usageWithSections(withVersion=withVersion, withSpecial=withSpecial, withSections=IncludeRequiredAndOptionalSections)
+  }
+
+  /**
+    * Print a usage message for a given command line task.
+    *
+    * @param withVersion include the version in the standard preamble.
+    * @param withSpecial include command line arguments marked as special.
+    * @param withSections have seperate sections for required and optional command line arguments, typically used for
+    *                     testing that each are or are not included.
+    **/
+  private[cmdline] def usageWithSections(withVersion: Boolean = true, withSpecial: Boolean = true, withSections: Boolean = false): String = {
     val builder = new StringBuilder()
 
     builder.append(s"$standardUsagePreamble")
@@ -221,25 +240,47 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
       case None =>
     }
 
-    // filter on common and partition on optional
-    val (required, optional) = argumentLookup.view
+    // Get all the command line arguments in the order they were declared
+    val arguments: Seq[ClpArgument] = argumentLookup.view
       .filterNot { _.hidden }
       .filter { withSpecial || !_.isSpecial }
-      .partition { !_.optional }
 
-    if (required.nonEmpty) {
-      builder.append(KRED(s"\n${KBLDRED(targetName)} ${KRED(RequiredArguments)}\n"))
-      builder.append(lineBreak(color=true))
-      new ClpArgumentLookup(required:_*).ordered.foreach { arg =>
-        ClpArgumentDefinitionPrinting.printArgumentDefinitionUsage(builder, arg, argumentLookup)
+    // Get all the group names in the order they were first declared in a command line argument
+    val groupNames = mutable.LinkedHashSet[String]()
+    arguments.foreach { arg => groupNames.add(arg.groupName.getOrElse("").capitalize)}
+
+    // Print out the commands by group
+    groupNames.foreach { groupName =>
+      // Get all the command line arguments for the given group in the order they were declared
+      val group: Seq[ClpArgument] = arguments.filter { arg => arg.groupName.getOrElse("").capitalize == groupName}
+      val (required, optional) = group.partition { !_.optional }
+      val prependToArgumentType = if (groupName.isEmpty) "" else s"($groupName) "
+
+      if (!withSections) {
+        builder.append(KRED(s"\n${KBLDRED(targetName)} ${KRED(prependToArgumentType + ArgumentsSuffix)}\n"))
+        builder.append(lineBreak(color=true))
       }
-    }
 
-    if (optional.nonEmpty) {
-      builder.append(KRED(s"\n${KBLDRED(targetName)} ${KRED(OptionalArguments)}\n"))
-      builder.append(lineBreak(color=true))
-      new ClpArgumentLookup(optional:_*).ordered.foreach { argumentDefinition =>
-        ClpArgumentDefinitionPrinting.printArgumentDefinitionUsage(builder, argumentDefinition, argumentLookup)
+      // Print out the required arguments
+      if (required.nonEmpty) {
+        if (withSections) {
+          builder.append(KRED(s"\n${KBLDRED(targetName)} ${KRED(prependToArgumentType + RequiredArguments)}\n"))
+          builder.append(lineBreak(color=true))
+        }
+        new ClpArgumentLookup(required:_*).ordered.foreach { arg =>
+          ClpArgumentDefinitionPrinting.printArgumentDefinitionUsage(builder, arg, argumentLookup)
+        }
+      }
+
+      // Print out the optional arguments
+      if (optional.nonEmpty) {
+        if (withSections) {
+          builder.append(KRED(s"\n${KBLDRED(targetName)} ${KRED(prependToArgumentType + OptionalArguments)}\n"))
+          builder.append(lineBreak(color=true))
+        }
+        new ClpArgumentLookup(optional:_*).ordered.foreach { arg =>
+          ClpArgumentDefinitionPrinting.printArgumentDefinitionUsage(builder, arg, argumentLookup)
+        }
       }
     }
 
