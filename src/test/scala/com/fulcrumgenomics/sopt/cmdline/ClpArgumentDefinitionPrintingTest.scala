@@ -42,7 +42,7 @@ case object Whee extends Foo
   */
 class ClpArgumentDefinitionPrintingTest extends UnitSpec with BeforeAndAfterAll {
 
-  import com.fulcrumgenomics.sopt.cmdline.ClpArgumentDefinitionPrinting.makeDefaultValueString
+  import com.fulcrumgenomics.sopt.cmdline.ClpArgumentDefinitionPrinting.{makeDefaultValueString, ArgumentOptionalValue}
 
   private var printColor = true
 
@@ -56,21 +56,22 @@ class ClpArgumentDefinitionPrintingTest extends UnitSpec with BeforeAndAfterAll 
   }
 
   "ClpArgumentDefinitionPrinting.makeDefaultValueString" should "print the default value" in {
-    makeDefaultValueString(None) shouldBe ""
-    makeDefaultValueString(Some(None)) shouldBe ""
-    makeDefaultValueString(Some(Nil)) shouldBe ""
-    makeDefaultValueString(Some(Set.empty)) shouldBe ""
-    makeDefaultValueString(Some(new util.ArrayList[java.lang.Integer]())) shouldBe ""
-    makeDefaultValueString(Some(Some("Value"))) shouldBe "[Default: Value]."
-    makeDefaultValueString(Some("Value")) shouldBe "[Default: Value]."
-    makeDefaultValueString(Some(Some(Some("Value")))) shouldBe "[Default: Some(Value)]."
-    makeDefaultValueString(Some(List("A", "B", "C"))) shouldBe "[Default: A, B, C]."
+    makeDefaultValueString(None) shouldBe s"[[$ArgumentOptionalValue]]."
+    makeDefaultValueString(Some(None)) shouldBe s"[[$ArgumentOptionalValue]]."
+    makeDefaultValueString(Some(Nil)) shouldBe s"[[$ArgumentOptionalValue]]."
+    makeDefaultValueString(Some(Set.empty)) shouldBe s"[[$ArgumentOptionalValue]]."
+    makeDefaultValueString(Some(new util.ArrayList[java.lang.Integer]())) shouldBe s"[[$ArgumentOptionalValue]]."
+    makeDefaultValueString(Some(Some("Value"))) shouldBe "[[Default: Value]]."
+    makeDefaultValueString(Some("Value")) shouldBe "[[Default: Value]]."
+    makeDefaultValueString(Some(Some(Some("Value")))) shouldBe "[[Default: Some(Value)]]."
+    makeDefaultValueString(Some(List("A", "B", "C"))) shouldBe "[[Default: A, B, C]]."
   }
 
   private def printArgumentUsage(name: String, shortName: Option[Char], theType: String,
-                                 collectionDescription: Option[String], argumentDescription: String): String = {
+                                 collectionDescription: Option[String], argumentDescription: String,
+                                 optional: Boolean = false): String = {
     val stringBuilder = new StringBuilder
-    ClpArgumentDefinitionPrinting.printArgumentUsage(stringBuilder=stringBuilder, name, shortName, theType, collectionDescription, argumentDescription)
+    ClpArgumentDefinitionPrinting.printArgumentUsage(stringBuilder=stringBuilder, name, shortName, theType, collectionDescription, argumentDescription, optional)
     stringBuilder.toString
   }
 
@@ -82,7 +83,7 @@ class ClpArgumentDefinitionPrintingTest extends UnitSpec with BeforeAndAfterAll 
     val description = "Some description"
 
     printArgumentUsage(longName, shortName, theType,   None,           description).startsWith(s"-${shortName.get} $theType, --$longName=$theType") shouldBe true
-    printArgumentUsage(longName, shortName, "Boolean", None,           description).startsWith(s"-${shortName.get} [true|false], --$longName[=true|false]") shouldBe true
+    printArgumentUsage(longName, shortName, "Boolean", None,           description).startsWith(s"-${shortName.get} [[true|false]], --$longName[[=true|false]]") shouldBe true
     printArgumentUsage(longName, None     , theType,   None,           description).startsWith(s"--$longName=$theType") shouldBe true
     printArgumentUsage(longName, shortName, theType,   Some("+"),      description).startsWith(s"-${shortName.get} $theType+, --$longName=$theType+") shouldBe true
     printArgumentUsage(longName, shortName, theType,   Some("{0,20}"), description).startsWith(s"-${shortName.get} $theType{0,20}, --$longName=$theType{0,20}") shouldBe true

@@ -39,24 +39,25 @@ import scala.reflect.runtime.universe._
 /** Various constants and methods for formatting and printing usages and error messages on the command line */
 trait CommandLineParserStrings {
   /** Lengths for names and descriptions on the command line */
-  val SubCommandGroupNameColumnLength = 38
-  val SubCommandGroupDescriptionColumnLength = Sopt.TerminalWidth - SubCommandGroupNameColumnLength
-  val SubCommandNameColumnLength = SubCommandGroupNameColumnLength - 3
+  val SubCommandGroupNameColumnLength: Int = 38
+  val SubCommandGroupDescriptionColumnLength: Int = Sopt.TerminalWidth - SubCommandGroupNameColumnLength
+  val SubCommandNameColumnLength: Int = SubCommandGroupNameColumnLength - 3
 
   /** The maximum line lengths for tool descriptions */
-  val SubCommandDescriptionLineLength = SubCommandGroupDescriptionColumnLength - 1
+  val SubCommandDescriptionLineLength: Int = SubCommandGroupDescriptionColumnLength - 1
 
   /** Error messages */
-  val AvailableSubCommands = "Available Sub-Commands:"
-  val MissingSubCommand = "No sub-command given."
+  val AvailableSubCommands: String = "Available Sub-Commands:"
+  val MissingSubCommand: String = "No sub-command given."
 
   /** Section headers */
-  val UsagePrefix = "USAGE:"
-  val RequiredArguments = "Required Arguments:"
-  val OptionalArguments = "Optional Arguments:"
+  val UsagePrefix: String = "USAGE:"
+  val ArgumentsSuffix: String = "Arguments:"
+  private[cmdline] val RequiredArguments: String = "Required Arguments:"
+  private[cmdline] val OptionalArguments: String = "Optional Arguments:"
 
   /** Section separator */
-  val SeparatorLine = KWHT("-" * Sopt.TerminalWidth + "\n")
+  val SeparatorLine: String = KWHT("-" * Sopt.TerminalWidth + "\n")
 
   /** Similarity floor for when searching for similar sub-command names. **/
   val HelpSimilarityFloor: Int = 7

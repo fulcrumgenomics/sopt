@@ -34,6 +34,7 @@ import com.fulcrumgenomics.sopt._
 import com.fulcrumgenomics.sopt.cmdline.testing.clps._
 import com.fulcrumgenomics.sopt.util.UnitSpec
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
+import com.fulcrumgenomics.sopt.cmdline.ClpArgumentDefinitionPrinting.ArgumentDefaultValuePrefix
 
 import scala.reflect.runtime.universe._
 import scala.reflect.ClassTag
@@ -47,8 +48,16 @@ class CommandLineProgramValidationError(@arg var aStringSomething: String = "Def
 class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with BeforeAndAfterAll with OptionValues {
 
   private val prevPrintColor = TermCode.printColor
-  override protected def beforeAll(): Unit = TermCode.printColor = false
-  override protected def afterAll(): Unit = TermCode.printColor = prevPrintColor
+  private val prevIncludeRequiredAndOptionalSections = CommandLineProgramParserStrings.IncludeRequiredAndOptionalSections
+
+  override protected def beforeAll(): Unit = {
+    TermCode.printColor = false
+    CommandLineProgramParserStrings.IncludeRequiredAndOptionalSections = true
+  }
+  override protected def afterAll(): Unit = {
+    TermCode.printColor = prevPrintColor
+    CommandLineProgramParserStrings.IncludeRequiredAndOptionalSections = prevIncludeRequiredAndOptionalSections
+  }
 
   private def nameOf(clazz: Class[_]): String = clazz.getSimpleName
 

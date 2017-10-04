@@ -27,8 +27,7 @@ package com.fulcrumgenomics.sopt.cmdline
 import java.util
 
 import com.fulcrumgenomics.commons.reflect.ReflectionUtil
-import com.fulcrumgenomics.commons.util.StringUtil
-import com.fulcrumgenomics.sopt.util.{KCYN, KGRN, MarkDownProcessor}
+import com.fulcrumgenomics.sopt.util.{KCYN, KGRN, KYEL, MarkDownProcessor}
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.sopt.Sopt
 
@@ -38,6 +37,10 @@ object ClpArgumentDefinitionPrinting {
   /** Strings for printing enum options */
   private[cmdline] val EnumOptionDocPrefix: String = "Options: "
   private[cmdline] val EnumOptionDocSuffix: String = "."
+
+  /** Prefix for the default value for an argument. */
+  private[cmdline] val ArgumentDefaultValuePrefix: String = "Default:"
+  private[cmdline] val ArgumentOptionalValue: String = "Optional"
 
   /**  For formatting argument section of usage message. */
   private val ArgumentColumnWidth: Int = 30
@@ -55,7 +58,8 @@ object ClpArgumentDefinitionPrinting {
       argumentDefinition.shortName,
       argumentDefinition.typeDescription,
       makeCollectionArity(argumentDefinition),
-      makeArgumentDescription(argumentDefinition, argumentLookup))
+      makeArgumentDescription(argumentDefinition, argumentLookup),
+      argumentDefinition.optional)
   }
 
   def mutexErrorHeader: String = " Cannot be used in conjunction with argument(s): "
@@ -93,24 +97,22 @@ object ClpArgumentDefinitionPrinting {
   private def makeCollectionArity(argumentDefinition: ClpArgument): Option[String] = {
     if (!argumentDefinition.isCollection) return None
 
-    val desciption = (argumentDefinition.minElements, argumentDefinition.maxElements) match {
+    val description = (argumentDefinition.minElements, argumentDefinition.maxElements) match {
       case (0, Integer.MAX_VALUE) => "*"
       case (1, Integer.MAX_VALUE) => "+"
-      case (m, n)                 => s"{${m}..${n}}"
+      case (m, n)                 => s"{$m..$n}"
     }
-    Some(desciption)
+    Some(description)
   }
 
   /**
-    * Intelligently decides whether or not to print a default value. Values are not printed if
-    *  a) There is no default
-    *  b) There is a default, but it is 'None'
-    *  c) There is a default, but it's an empty list
-    *  d) There is a default, but it's an empty set
+    * Prints the default value if available, otherwise a message that it is not required.  This assumes the argument is
+    * optional.
     */
   private[sopt] def makeDefaultValueString(value : Option[_]) : String = {
     val vs = defaultValuesAsSeq(value)
-    if (vs.isEmpty) "" else s"[Default: ${vs.mkString(", ")}]."
+    // NB: extra square brackets are inserted due to one set being stripped during markdown processing
+    KGRN(if (vs.isEmpty) s"[[$ArgumentOptionalValue]]." else s"[[$ArgumentDefaultValuePrefix ${vs.mkString(", ")}]].")
   }
 
   /** Returns the set of default values as a Seq of Strings, one per default value. */
@@ -126,14 +128,17 @@ object ClpArgumentDefinitionPrinting {
 
   /** Prints the usage for a given argument given its various elements */
   private[cmdline] def printArgumentUsage(stringBuilder: StringBuilder, name: String, shortName: Option[Char], theType: String,
-                                          collectionArityString: Option[String], argumentDescription: String): Unit = {
+                                          collectionArityString: Option[String], argumentDescription: String,
+                                          optional: Boolean): Unit = {
     // Desired output: "-f Foo, --foo=Foo" and for Booleans, "-f [true|false] --foo=[true|false]"
     val collectionDesc = collectionArityString.getOrElse("")
-    val (shortType, longType) = if (theType == "Boolean") ("[true|false]","[=true|false]") else (theType, "=" + theType)
+    // NB: extra square brackets are inserted due to one set being stripped during markdown processing
+    val (shortType, longType) = if (theType == "Boolean") ("[[true|false]]","[[=true|false]]") else (theType, "=" + theType)
     val label = new StringBuilder()
     shortName.foreach(n => label.append("-" + n + " " + shortType + collectionDesc + ", "))
     label.append("--" + name + longType + collectionDesc)
-    stringBuilder.append(KGRN(label.toString()))
+    val colorLabel = if (optional) KGRN else KYEL
+    stringBuilder.append(colorLabel(label.toString()))
 
     // If the label is short enough, just pad out the column, otherwise wrap to the next line for the description
     val numSpaces: Int =  if (label.length > ArgumentColumnWidth) {
