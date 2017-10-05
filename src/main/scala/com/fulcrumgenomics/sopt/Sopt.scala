@@ -62,6 +62,7 @@ object Sopt {
     * Represents information about an argument to a command line program.
     *
     * @param name the name of the argument as presented on the command line
+    * @param group the (optional) name of the group in which the argument exists
     * @param flag the optional flag character for the argument if it has one
     * @param kind the name of the type of the argument (for collection arguments, the type in the collection)
     * @param minValues the minimum number of values that must be specified
@@ -71,6 +72,7 @@ object Sopt {
     * @param description the description of the argument
     */
   case class Arg(name: String,
+                 group: Option[String],
                  flag: Option[Char],
                  kind: String,
                  minValues: Int,
@@ -103,6 +105,7 @@ object Sopt {
     val clpAnn = ParsingUtil.findClpAnnotation(clp).getOrElse(throw new IllegalStateException("No @clp on " + clp.getName))
     val args   = parser.argumentLookup.ordered.map ( a => Arg(
       name          = a.longName,
+      group         = a.groupName,
       flag          = a.shortName,
       kind          = a.typeName,
       minValues     = if (a.isCollection) a.minElements else if (a.optional) 0 else 1,
