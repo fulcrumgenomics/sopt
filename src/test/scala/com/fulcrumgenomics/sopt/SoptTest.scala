@@ -28,7 +28,10 @@ class SoptCommand1
 @clp(group=classOf[Clps], description="A second test program for Sopt.")
 class SoptCommand2 
 ( @arg(flag='i', doc="Input file.") val inputPath: FancyPath,
-  @arg(flag='o', doc="Output file.") val outputPath: FancyPath
+  @arg(flag='o', doc="Output file.") val outputPath: FancyPath,
+  nonArgArgument: String = "Shhh, I'm not really here",
+  val nonArgArgument2: String = "Me either!",
+  private val nonArgArgument3: String = "Nobody here but us @args"
 ) extends SoptTestCommand
 
 
@@ -95,6 +98,7 @@ class SoptTest extends UnitSpec {
     clp.hidden            shouldBe false
     
     val args = clp.args.map(a => a.name -> a).toMap
+    args.size shouldBe 2
     
     args("input-path").name              shouldBe "input-path"
     args("input-path").flag              shouldBe Some('i')
