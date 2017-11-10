@@ -103,7 +103,7 @@ object Sopt {
   def inspect[A](clp: Class[A]): ClpMetadata = {
     val parser = new CommandLineProgramParser(clp, includeSpecialArgs=false)
     val clpAnn = ParsingUtil.findClpAnnotation(clp).getOrElse(throw new IllegalStateException("No @clp on " + clp.getName))
-    val args   = parser.argumentLookup.ordered.map ( a => Arg(
+    val args   = parser.argumentLookup.ordered.filter(_.annotation.isDefined).map ( a => Arg(
       name          = a.longName,
       group         = a.groupName,
       flag          = a.shortName,
