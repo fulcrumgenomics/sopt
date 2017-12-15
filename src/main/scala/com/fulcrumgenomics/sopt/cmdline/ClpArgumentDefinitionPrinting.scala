@@ -84,10 +84,10 @@ object ClpArgumentDefinitionPrinting {
       sb.append(argumentDefinition.mutuallyExclusive.map { targetFieldName =>
         argumentLookup.forField(targetFieldName) match {
           case None =>
-            throw new UserException(s"Invalid argument definition in source code (see mutex). " +
+            throw UserException(s"Invalid argument definition in source code (see mutex). " +
               s"$targetFieldName doesn't match any known argument.")
           case Some(mutex) =>
-            mutex.name + (if (mutex.shortName.nonEmpty) s" (${mutex.shortName})" else "")
+            mutex.name + mutex.shortName.map { c => s" ($c)" }.getOrElse("")
         }
       }.mkString(", "))
     }
