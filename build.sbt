@@ -117,7 +117,7 @@ lazy val root = Project(id="sopt", base=file("."))
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang"       %  "scala-reflect" %  scalaVersion.value,
-      "com.fulcrumgenomics"  %% "commons"       % "0.3.0",
+      "com.fulcrumgenomics"  %% "commons"       % "0.4.0",
       "com.vladsch.flexmark" % "flexmark"       % "0.18.5",
 
       //---------- Test libraries -------------------//
