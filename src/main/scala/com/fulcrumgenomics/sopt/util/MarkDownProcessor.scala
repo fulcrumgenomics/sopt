@@ -59,6 +59,9 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
   private val EmptyChunk = Seq(Chunk.empty)
   private val SpaceChunk = Seq(Chunk.unwrappable(0, " "))
 
+  /** Trims trailing whitespace, but keeps the last ASCII escape code. */
+  private val trimRegex = raw"\s+(\u001B\[\d+m)*$$".r
+
   // A markdown parser
   private val (parser, htmlRenderer) = {
     val options  = new MutableDataSet()
@@ -79,6 +82,9 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
 
   /** Converts a MarkDown document to HTML. */
   def toHtml(document: Node): String = this.htmlRenderer.render(document).trim
+
+  /** Removes all trailing whitespace, without considering (i.e. keeping) ANSI terminal/color codes. */
+  private def trim(string: String): String = this.trimRegex.replaceAllIn(string, "$1")
 
   /**
     * Recursive method that does the real work of converting a MarkDown document to text. Navigates
@@ -167,7 +173,7 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
         buffer.append(words.next()).append(" ") // always append at least one word, even if it's too long
         while (words.hasNext && buffer.length + words.head.length < length) buffer.append(words.next()).append(" ")
         val prefix = if (lines.isEmpty) indent else gutter
-        lines.append(prefix + buffer.toString().trim)
+        lines.append(prefix + trim(buffer.toString))
         buffer.clear()
       }
 
