@@ -205,4 +205,18 @@ class MarkDownProcessorTest extends UnitSpec {
     val html = processor.toHtml(processor.parse(markdown)).trim
     html shouldBe expected
   }
+
+  "MarkDownProcessor.trim" should "trim the first non-ansi-escape-code non-whitespace characters" in {
+    MarkDownProcessor.trim(KRED(KGRN(" A BCDEF G"))) shouldBe KRED(KGRN("A BCDEF G"))
+    MarkDownProcessor.trim(KRED(KGRN("A BCDEF G"))) shouldBe KRED(KGRN("A BCDEF G"))
+    MarkDownProcessor.trim(KRED(" ABCDEFG")) shouldBe KRED("ABCDEFG")
+    MarkDownProcessor.trim(" ABCDEFG") shouldBe "ABCDEFG"
+  }
+
+  it should "trim the last non-ansi-escape-code whitespace characters" in {
+    MarkDownProcessor.trim(KRED(KGRN("A BCDEF G "))) shouldBe KRED(KGRN("A BCDEF G"))
+    MarkDownProcessor.trim(KRED(KGRN("A BCDEF G"))) shouldBe KRED(KGRN("A BCDEF G"))
+    MarkDownProcessor.trim(KRED("ABCDEFG ")) shouldBe KRED("ABCDEFG")
+    MarkDownProcessor.trim("ABCDEFG ") shouldBe "ABCDEFG"
+  }
 }
