@@ -76,7 +76,7 @@ object ClpArgumentDefinitionPrinting {
     val sb: StringBuilder = new StringBuilder
     if (argumentDefinition.doc.nonEmpty) sb.append(argumentDefinition.doc).append("  ")
     if (argumentDefinition.optional) sb.append(makeDefaultValueString(argumentDefinition.defaultValue))
-    val possibles = possibleValues(argumentDefinition.unitType)
+    val possibles = KGRN(possibleValues(argumentDefinition.unitType))
     if (possibles.nonEmpty) sb.append(" ").append(possibles)
 
     if (argumentDefinition.mutuallyExclusive.nonEmpty) {
