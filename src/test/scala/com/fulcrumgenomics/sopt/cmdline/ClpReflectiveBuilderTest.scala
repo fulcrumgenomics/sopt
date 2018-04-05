@@ -117,6 +117,7 @@ class ClpReflectiveBuilderTest extends UnitSpec {
     val exception = intercept[Exception] { arg.setArgument("NotALogLevel") }
     exception.getMessage.count(_ == '\n') should be > 0 // At least two lines, from a chained exception
     // make sure all enums are listed
+    exception.getMessage should include ("log-level")
     LogLevel.values().foreach { level => exception.getMessage should include (level.name()) }
   }
 

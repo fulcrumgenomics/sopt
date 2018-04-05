@@ -173,7 +173,7 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
       ReflectionUtil.constructFromString(this.argumentType, this.unitType, values: _*) match {
         case Success(v) => v
         case Failure(ex: Exception) => throw BadArgumentValue(
-          msg="Argument could not be constructed from string" + chainedExceptionMessage(ex))
+          msg=s"Argument '$longName' could not be constructed from string" + chainedExceptionMessage(ex))
         case Failure(thr) => throw BadArgumentValue(thr.getMessage)
       }
     }
