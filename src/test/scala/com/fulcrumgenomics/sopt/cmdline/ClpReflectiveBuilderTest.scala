@@ -25,6 +25,7 @@
 package com.fulcrumgenomics.sopt.cmdline
 
 import com.fulcrumgenomics.commons.reflect.ReflectionUtil
+import com.fulcrumgenomics.commons.util.LogLevel
 import com.fulcrumgenomics.sopt.arg
 import com.fulcrumgenomics.sopt.util.UnitSpec
 
@@ -35,19 +36,21 @@ private case class DefaultWithOption(@arg w: Option[Int] = None)
 private case class DefaultWithSomeOption(@arg w: Option[Int] = Some(4))
 private case class NoParams()
 private case class StringDefault(@arg s: String = "null")
-private case class ComplexDefault(@arg v: StringDefault = new StringDefault())
+private case class ComplexDefault(@arg v: StringDefault = StringDefault())
 private case class ComplexNoDefault(@arg v: StringDefault)
 private case class NoValuesInCollection(@arg(minElements=0) v: Seq[Int] = Seq.empty)
 
 private class NotCaseClass(@arg val i:Int, @arg val l:Long=123, @arg val o : Option[String] = None)
 private class ParamsNotVals(@arg i:Int, @arg l:Long) {
-  val x = i
-  val y = l
+  val x:Int = i
+  val y:Long = l
 }
 
 private class SecondaryConstructor1(val x:Int, val y:Int) { def this(@arg a:Int) = this(a, a*2) }
 private class NoAnnotation(val x:Int)
 private class ConflictingNames(@arg(name="name") val x:Int, @arg(name="name") val y:Int)
+
+private class LogLevelEnum(@arg logLevel: LogLevel)
 
 class ClpReflectiveBuilderTest extends UnitSpec {
 
@@ -66,7 +69,7 @@ class ClpReflectiveBuilderTest extends UnitSpec {
     val tt = new ClpReflectiveBuilder(classOf[DefaultWithOption]).build(List(None))
     tt.w shouldBe 'empty
     new ClpReflectiveBuilder(classOf[NoParams]).build(Nil)
-    new ClpReflectiveBuilder(classOf[ComplexDefault]).build(List(new StringDefault()))
+    new ClpReflectiveBuilder(classOf[ComplexDefault]).build(List(StringDefault()))
   }
 
   it should "throw an exception when arguments are missing when trying to instantiate a case-class" in {
@@ -105,8 +108,16 @@ class ClpReflectiveBuilderTest extends UnitSpec {
     t.argumentLookup.view.foreach { arg =>
       an[IllegalStateException] should be thrownBy arg.minElements
       an[IllegalStateException] should be thrownBy arg.maxElements
-
     }
+  }
+
+  it should "have informative error messages with the wrong Enum value" in {
+    val builder = new ClpReflectiveBuilder(classOf[LogLevelEnum])
+    val arg = builder.argumentLookup.forArg("log-level").get
+    val exception = intercept[Exception] { arg.setArgument("NotALogLevel") }
+    exception.getMessage.count(_ == '\n') should be > 0 // At least two lines, from a chained exception
+    // make sure all enums are listed
+    LogLevel.values().foreach { level => exception.getMessage should include (level.name()) }
   }
 
   "ClpReflectiveBuilder.toCommandLineString" should "throw an IllegalStateException when trying to print an argument with no value" in {
@@ -130,7 +141,7 @@ class ClpReflectiveBuilderTest extends UnitSpec {
     }
   }
 
-  it should "print hte special empty token for an empty collection" in {
+  it should "print the special empty token for an empty collection" in {
     val t = new ClpReflectiveBuilder(classOf[NoValuesInCollection])
     t.argumentLookup.view.foreach {
       _.toCommandLineString shouldBe s"--v ${ReflectionUtil.SpecialEmptyOrNoneToken}"
