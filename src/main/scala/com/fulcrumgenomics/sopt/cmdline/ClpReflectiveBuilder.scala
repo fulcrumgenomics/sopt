@@ -172,12 +172,18 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
     else this.value = {
       ReflectionUtil.constructFromString(this.argumentType, this.unitType, values: _*) match {
         case Success(v) => v
-        case Failure(ex: Exception) => throw new BadArgumentValue(msg="Argument could not be constructed from string", e=ex)
+        case Failure(ex: Exception) => throw BadArgumentValue(
+          msg=s"Argument '$longName' could not be constructed from string" + chainedExceptionMessage(ex))
         case Failure(thr) => throw BadArgumentValue(thr.getMessage)
       }
     }
 
     this.isSetByUser = true
+  }
+
+  /** Creates a single message from the chain of exceptions starting at ex. */
+  private def chainedExceptionMessage(ex: Throwable): String = {
+    if (ex == null) "" else s"\n\t...${ex.getMessage}" + chainedExceptionMessage(ex.getCause)
   }
 
   /** Gets the list of names by which this option can be passed on the command line. Will be length 1 or 2. */
