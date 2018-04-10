@@ -1,7 +1,5 @@
 package com.fulcrumgenomics.sopt.util
 
-import com.fulcrumgenomics.commons.CommonsDef._
-
 class MarkDownProcessorTest extends UnitSpec {
   val processor = new MarkDownProcessor()
 
@@ -177,7 +175,19 @@ class MarkDownProcessorTest extends UnitSpec {
 
     proc.toText(proc.parse(markdown)) shouldBe markdown.lines.toSeq
   }
-  
+
+  "MarkDownProcessor.toText" should "convert markdown to text ignoring trailing terminal codes" in {
+    val proc = new MarkDownProcessor(lineLength=40)
+    val sb = new StringBuilder()
+    sb.append(KGRN("--remove-alignment-information[[=true|false]]"))
+    sb.append(" ")
+    sb.append(KCYN("Remove all alignment information (as well as secondary and supplementary records. " + KGRN("[[Default: false]].")))
+    val markdown = KCYN(sb.toString)
+    val lines = proc.toText(proc.parse(markdown))
+    val processedMarkdown = markdown.replaceAll("\\[\\[", "[").replaceAll("\\]\\]", "]")
+    lines.mkString(" ") shouldBe processedMarkdown
+  }
+
   "MarkDownProcessor.toHtml" should "convert markdown to HTML" in {
     val markdown =
       """
@@ -194,5 +204,19 @@ class MarkDownProcessorTest extends UnitSpec {
     
     val html = processor.toHtml(processor.parse(markdown)).trim
     html shouldBe expected
+  }
+
+  "MarkDownProcessor.trim" should "trim the first non-ansi-escape-code non-whitespace characters" in {
+    MarkDownProcessor.trim(KRED(KGRN(" A BCDEF G"))) shouldBe KRED(KGRN("A BCDEF G"))
+    MarkDownProcessor.trim(KRED(KGRN("A BCDEF G"))) shouldBe KRED(KGRN("A BCDEF G"))
+    MarkDownProcessor.trim(KRED(" ABCDEFG")) shouldBe KRED("ABCDEFG")
+    MarkDownProcessor.trim(" ABCDEFG") shouldBe "ABCDEFG"
+  }
+
+  it should "trim the last non-ansi-escape-code whitespace characters" in {
+    MarkDownProcessor.trim(KRED(KGRN("A BCDEF G "))) shouldBe KRED(KGRN("A BCDEF G"))
+    MarkDownProcessor.trim(KRED(KGRN("A BCDEF G"))) shouldBe KRED(KGRN("A BCDEF G"))
+    MarkDownProcessor.trim(KRED("ABCDEFG ")) shouldBe KRED("ABCDEFG")
+    MarkDownProcessor.trim("ABCDEFG ") shouldBe "ABCDEFG"
   }
 }

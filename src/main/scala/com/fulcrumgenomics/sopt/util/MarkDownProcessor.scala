@@ -49,6 +49,37 @@ object Chunk {
   def empty = new Chunk(text="", wrappable=false, indent=0)
 }
 
+object MarkDownProcessor {
+
+  /** Matches any leading consecutive ANSI escape codes.  */
+  private val leadingAnsiColorRegex = raw"^(\u001B\[\d+m)*".r
+
+  /** Matches any trailing consecutive ANSI escape codes.  */
+  private val trailingAnsiColorRegex = raw"(\u001B\[\d+m)*$$".r
+
+  /** Removes all leading and trailing whitespace, ignoring leading or trailing ANSI escape codes.  If no ANSI escape
+    * codes are present, this is equivalent to the `trim` method in [[String]].
+    *
+    * @example
+    * `"ABC"`              -> `"ABC"`           (no trimming)
+    * `"<esc>ABC"`         -> `"<esc>ABC"`      (no trimming)
+    * `"ABC<esc>"`         -> `"ABC<esc>"`      (no trimming)
+    * `"<esc>ABC<esc>"`    -> `"<esc>ABC<esc>"` (no trimming)
+    * `" ABC"`             -> `"ABC"`           (trimming, no ansi escape codes)
+    * `"ABC  "`            -> `"ABC"`           (trimming, no ansi escape codes)
+    * `" ABC  "`           -> `"ABC"`           (trimming, no ansi escape codes)
+    * `"<esc> ABC<esc>"`   -> `"<esc>ABC<esc>"` (trimming, ansi escape codes preserved)
+    * `"<esc>ABC  <esc>"`  -> `"<esc>ABC<esc>"` (trimming, ansi escape codes preserved)
+    * `"<esc> ABC  <esc>"` -> `"<esc>ABC<esc>"` (trimming, ansi escape codes preserved)
+    * */
+  private[util] def trim(string: String): String = if (string.isEmpty) string else {
+    val prefix = this.leadingAnsiColorRegex.findFirstIn(string).getOrElse("")
+    val suffix = this.trailingAnsiColorRegex.findFirstIn(string).getOrElse("")
+    val middle = string.substring(prefix.length, string.length - suffix.length)
+    prefix + middle.trim + suffix
+  }
+}
+
 /**
  * Class for working with MarkDown documents and converting them to HTML or to line-wrapped
  * plain text.
@@ -79,6 +110,8 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
 
   /** Converts a MarkDown document to HTML. */
   def toHtml(document: Node): String = this.htmlRenderer.render(document).trim
+
+
 
   /**
     * Recursive method that does the real work of converting a MarkDown document to text. Navigates
@@ -167,7 +200,7 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
         buffer.append(words.next()).append(" ") // always append at least one word, even if it's too long
         while (words.hasNext && buffer.length + words.head.length < length) buffer.append(words.next()).append(" ")
         val prefix = if (lines.isEmpty) indent else gutter
-        lines.append(prefix + buffer.toString().trim)
+        lines.append(prefix + MarkDownProcessor.trim(buffer.toString))
         buffer.clear()
       }
 
