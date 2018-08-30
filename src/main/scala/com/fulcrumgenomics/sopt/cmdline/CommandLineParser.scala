@@ -26,7 +26,7 @@ package com.fulcrumgenomics.sopt.cmdline
 
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.reflect.ReflectionUtil
-import com.fulcrumgenomics.sopt.Sopt.{CommandSuccess, Failure, Result, SubcommandSuccess}
+import com.fulcrumgenomics.sopt.Sopt._
 import com.fulcrumgenomics.sopt.{Sopt, clp}
 import com.fulcrumgenomics.sopt.util.ParsingUtil._
 import com.fulcrumgenomics.sopt.util._
@@ -147,14 +147,28 @@ class CommandLineParser[SubCommand](val commandLineName: String)
   private type SubCommandClass = Class[_ <: SubCommand]
   private type SubCommandGroupClass = Class[_ <: ClpGroup]
 
-  private var _commandLine: Option[String] = None
   private val usagePrinter = new StringBuilder()
+
+  private var _commandParser: Option[CommandLineProgramParser[_]] = None
+
+  private var _subcommandParser: Option[CommandLineProgramParser[SubCommand]] = None
 
   private def print(s: String) = usagePrinter.append(s).append("\n")
 
   /** The command line with all arguments and values stored after the [[parseSubCommand()]] or
     * [[parseCommandAndSubCommand()]] was successful, otherwise [[None]]. */
-  def commandLine: Option[String] = _commandLine
+  def commandLine: Option[String] = (_commandParser, _subcommandParser) match {
+    case (Some(cmdParser), Some(subParser)) => Some(cmdParser.commandLine() + " " + subParser.commandLine())
+    case (Some(cmdParser), None)            => Some(cmdParser.commandLine())
+    case (None,            Some(subParser)) => Some(subParser.commandLine())
+    case (None,            None)            => None
+  }
+
+  /** The metadata about the command parser from [[parseCommandAndSubCommand()]], [[None]] otherwise. */
+  def commandMetadata: Option[ClpMetadata] = _commandParser.map(parser => Sopt.inspect(parser=Some(parser)))
+
+  /** The metadata about the sub-command parser from [[parseSubCommand()]] or [[parseCommandAndSubCommand()]], [[None]] otherwise. */
+  def subcommandMetadata: Option[ClpMetadata] = _subcommandParser.map(parser => Sopt.inspect(parser=Some(parser)))
 
   /** The error message for an unknown sub-command. */
   private[cmdline] def unknownSubCommandErrorMessage(command: String, classes: Traversable[SubCommandClass] = Set.empty): String = {
@@ -299,8 +313,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
         /////////////////////////////////////////////////////////////////////////
         // Parse the arguments for the Command Line Program class
         /////////////////////////////////////////////////////////////////////////
-        // FIXME: could not get this to work as an anonymous subclass, so I just extended it.
-        class ClpParser[SubCommand](targetClass: Class[SubCommand]) extends CommandLineProgramParser[SubCommand](targetClass, withSpecialArgs) {
+        val clpParser = new CommandLineProgramParser[SubCommand](clazz.asInstanceOf[Class[SubCommand]], withSpecialArgs) {
           override protected def standardUsagePreamble: String = {
             extraUsage match {
               case Some(_) => s"${KBLDRED(targetName)}"
@@ -308,7 +321,6 @@ class CommandLineParser[SubCommand](val commandLineName: String)
             }
           }
         }
-        val clpParser = new ClpParser(clazz)
         clpParser.parseAndBuild(args.drop(1)) match {
           case ParseFailure(ex, _) => // Case 5
             printExtraUsage(clazz=Some(clazz))
@@ -325,7 +337,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
           case ParseSuccess() => // Case 8
             val clp: SubCommand = clpParser.instance.get
             try {
-              _commandLine = Some(_commandLine.map(_ + " ").getOrElse("") + clpParser.commandLine())
+              _subcommandParser = Some(clpParser)
               CommandSuccess(clp)
             }
             catch {
@@ -391,7 +403,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
     // Try parsing and building CommandClass and handle the outcomes
     /////////////////////////////////////////////////////////////////////////
     mainClassParser.parseAndBuild(args=mainClassArgs) match {
-      case ParseFailure(ex, remaining) => // Case (1)
+      case ParseFailure(ex, _) => // Case (1)
         print(mainClassParser.usage())
         print(wrapError(ex.getMessage))
         Failure(() => usagePrinter.toString())
@@ -407,7 +419,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
         // Get setup, and attempt to ID and load the clp class
         /////////////////////////////////////////////////////////////////////////
         val mainInstance = mainClassParser.instance.get
-        this._commandLine = Some(mainClassParser.commandLine())
+        _commandParser = Some(mainClassParser)
 
         this.parseSubCommand(args=clpArgs, subcommands=subcommands, extraUsage = Some(mainClassParser.usage()), withVersion=false) match {
           case f: Failure          => f
@@ -438,7 +450,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
             // if we found one that was similar, then split the args at that point
             distances.zipWithIndex.min match {
               case (distance, idx) if distance < Integer.MAX_VALUE => args.splitAt(idx)
-              case (distance, idx) => (args, Seq.empty)
+              case (_, _)                                          => (args, Seq.empty)
             }
         }
       case idx =>

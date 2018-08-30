@@ -137,7 +137,7 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
   val optional: Boolean = hidden || isFlag || hasValue || (isCollection && annotation.get.minElements() == 0) || argumentType == classOf[Option[_]]
 
   /** true if the field was set by the user */
-  private[cmdline] var isSetByUser: Boolean = false // NB: only true when [[setArgument]] is called, vs. this.value =
+  private[sopt] var isSetByUser: Boolean = false // NB: only true when [[setArgument]] is called, vs. this.value =
 
   lazy val isSpecial: Boolean   = annotation.exists(_.special())
   lazy val isSensitive: Boolean = annotation.exists(_.sensitive())
@@ -243,36 +243,62 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
   }
 
   /**
-    * Helper for pretty printing this option.
+    * Helper for pretty printing the option name and value.
     *
     * @param value A value this argument was given
     * @return a string
     *
     */
-  private def prettyNameValue(value: Any): String = {
+  private def prettyNameAndValue(value: Any): String = {
     Option(value) match {
-      case Some(_) if isSensitive  => f"--$longName ***********"
-      case Some(Some(optionValue)) => prettyNameValue(optionValue)
-      case Some(None)              => f"--$longName ${ReflectionUtil.SpecialEmptyOrNoneToken}"
-      case Some(v)                 => f"--$longName $v"
-      case _ => ""
+      case Some(v) => f"--$longName ${prettyValue(v)}"
+      case _       => ""
+    }
+  }
+
+  /**
+    * Helper for pretty printing the option value (no name).
+    *
+    * @param value A value this argument was given
+    * @return a string
+    *
+    */
+  private def prettyValue(value: Any): String = {
+    Option(value) match {
+      case Some(_) if isSensitive  => "***********"
+      case Some(Some(optionValue)) => prettyValue(optionValue)
+      case Some(None)              => s"${ReflectionUtil.SpecialEmptyOrNoneToken}"
+      case Some(v)                 => s"$v"
+      case _                       => ""
     }
   }
 
   /**
     * Returns a string representation of this argument and it's value(s) which would be valid if copied and pasted
-    * back as a command line argument. Will throw an exception if called on an ArgumentDefinition that has not been
+    * back as a command line argument. Will throw an exception if called on an [[ClpArgument]] that has not been
     * set.
     */
   def toCommandLineString: String = this.value match {
     case Some(v) =>
       if (this.isCollection) {
         val someCollection = new SomeCollection(v)
-        if (someCollection.isEmpty) prettyNameValue(None)
-        else prettyNameValue(someCollection.values.mkString(" "))
+        if (someCollection.isEmpty) prettyNameAndValue(None)
+        else prettyNameAndValue(someCollection.values.mkString(" "))
       }
-      else prettyNameValue(v)
-    case None =>
-      throw new IllegalStateException("toCommandLineString not allowed on unset argument.")
+      else prettyNameAndValue(v)
+    case None => throw new IllegalStateException("toCommandLineString not allowed on unset argument.")
+  }
+
+  /** Returns the sequence of values for this argument. Will throw an exception if called on an [[ClpArgument]] that has
+    * not been set.*/
+  def toArgs: Seq[String] = this.value match {
+    case Some(v) =>
+      if (this.isCollection) {
+        val someCollection = new SomeCollection(v)
+        if (someCollection.isEmpty) Seq(prettyValue(None))
+        else someCollection.values.map(prettyValue).toSeq
+      }
+      else Seq(prettyValue(v))
+    case None => throw new IllegalStateException("toCommandLineString not allowed on unset argument.")
   }
 }

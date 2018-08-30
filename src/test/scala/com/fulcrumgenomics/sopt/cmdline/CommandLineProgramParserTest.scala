@@ -1076,8 +1076,8 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
 
     val p = parser(classOf[GeneralTestingProgram])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
-    val commandLine: String = p.commandLine()
-    commandLine shouldBe "GeneralTestingProgram --string-set Foo Bar --int-set 1 2 --int-arg 1 --enum-arg Debug --string-list Foo Bar --flag false"
+    p.commandLine(withDefaults=true) shouldBe "GeneralTestingProgram --string-set Foo Bar --int-set 1 2 --int-arg 1 --enum-arg Debug --string-list Foo Bar --flag false"
+    p.commandLine(withDefaults=false) shouldBe "GeneralTestingProgram --string-set Foo Bar --int-set 1 2 --int-arg 1 --string-list Foo Bar"
   }
 
   it should "return the command line string but not show a sensitive arg" in {
@@ -1086,7 +1086,8 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val p = parser(classOf[SensitiveArgTestingProgram])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val commandLine: String = p.commandLine()
-    commandLine shouldBe s"${task.getClass.getSimpleName} --flag ***********"
+    p.commandLine(withDefaults=true) shouldBe s"${task.getClass.getSimpleName} --flag ***********"
+    p.commandLine(withDefaults=false) shouldBe s"${task.getClass.getSimpleName}"
   }
 
   it should "return the command line string having options with no value at the end" in {
@@ -1094,8 +1095,8 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val args = Array[String]()
     val p = parser(classOf[NoneTestingProgram])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
-    val commandLine: String = p.commandLine()
-    commandLine shouldBe s"${task.getClass.getSimpleName} --flag false --option ${ReflectionUtil.SpecialEmptyOrNoneToken}"
+    p.commandLine(withDefaults=true) shouldBe s"${task.getClass.getSimpleName} --flag false --option ${ReflectionUtil.SpecialEmptyOrNoneToken}"
+    p.commandLine(withDefaults=false) shouldBe s"${task.getClass.getSimpleName}"
   }
 
   "CommandLineProgramParser.version" should "return the version" in {
