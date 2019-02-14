@@ -31,7 +31,7 @@ It has the following high level features:
 To use sopt you will need to add it to your build.  For sbt this looks like:
 
 ```scala
-libraryDependencies +=  "com.fulcrumgenomics" %% "sopt" % "0.2.0"
+libraryDependencies +=  "com.fulcrumgenomics" %% "sopt" % "0.7.0"
 ```
 
 You'll then need the following:
