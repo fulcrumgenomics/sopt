@@ -295,11 +295,12 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
   }
 
   /** Gets the command line assuming `parseTasks` has been called */
-  def commandLine(): String = {
+  def commandLine(withDefaults: Boolean = true): String = {
     val argumentList = this.argumentLookup.ordered.filterNot(_.hidden)
     val toolName: String = targetName
     val commandLineString = argumentList
       .filterNot(_.isSpecial)
+      .filter(_.isSetByUser || withDefaults)
       .groupBy(!_.hasValue) // so that args with values come first
       .flatMap { case (_, args) => args.map(_.toCommandLineString) }
       .mkString(" ")
@@ -317,11 +318,11 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
     try {
       args.view.foreach { argumentDefinition =>
         val fullName: String = argumentDefinition.longName
-        val mutextArgumentNames: StringBuilder = new StringBuilder
+        val mutexArgumentNames: StringBuilder = new StringBuilder
 
         // Validate mutex's
         //NB:  Make sure to remove duplicates
-        mutextArgumentNames.append(
+        mutexArgumentNames.append(
           argumentDefinition.mutuallyExclusive
             .toList.flatMap(args.forField(_) match {
               case Some(m) if m.isSetByUser => Some(m)
@@ -331,15 +332,15 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
             .map { _.longName}
             .mkString(", ")
         )
-        if (argumentDefinition.isSetByUser && mutextArgumentNames.nonEmpty) {
-          throw new UserException(s"Argument '$fullName' cannot be used in conjunction with argument(s): ${mutextArgumentNames.toString}")
+        if (argumentDefinition.isSetByUser && mutexArgumentNames.nonEmpty) {
+          throw UserException(s"Argument '$fullName' cannot be used in conjunction with argument(s): ${mutexArgumentNames.toString}")
         }
 
         if (argumentDefinition.isCollection && !argumentDefinition.optional) {
           argumentDefinition.validateCollection()
         }
-        else if (!argumentDefinition.optional && !argumentDefinition.hasValue && mutextArgumentNames.isEmpty) {
-          throw new UserException(requiredArgumentWithMutexErrorMessage(fullName, argumentDefinition))
+        else if (!argumentDefinition.optional && !argumentDefinition.hasValue && mutexArgumentNames.isEmpty) {
+          throw UserException(requiredArgumentWithMutexErrorMessage(fullName, argumentDefinition))
         }
       }
     }

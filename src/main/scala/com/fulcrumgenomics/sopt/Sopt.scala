@@ -1,9 +1,11 @@
 package com.fulcrumgenomics.sopt
 
-import com.fulcrumgenomics.sopt.cmdline.{ClpArgumentDefinitionPrinting, ClpGroup, CommandLineParser, CommandLineProgramParser}
+import com.fulcrumgenomics.commons.reflect.ReflectionUtil
+import com.fulcrumgenomics.sopt.cmdline.{CommandLineParser, _}
 import com.fulcrumgenomics.sopt.util.{MarkDownProcessor, ParsingUtil}
 import com.sun.org.apache.xpath.internal.Arg
 
+import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.ClassTag
 
@@ -56,7 +58,25 @@ object Sopt {
                          hidden: Boolean,
                          description: String,
                          args: Seq[Arg]
-                        ) extends MarkDownDescription
+                        ) extends MarkDownDescription {
+    /** Returns a command line string representation of the arguments.  If user-specified values are set on the args,
+      * it will use those, otherwise the defaults if present, otherwise it the type of the argument.
+      *
+      * @param withDefaults true to include args with defaults, otherwise those with user-set values.
+      * @return
+      */
+    def commandLine(withDefaults: Boolean = true): String = {
+      // groupBy.toSeq.sortBy is used to ensure that args with user-defined values come first, then args with default
+      // values, then non-special args, and finally special args.
+      val argStrings = args
+        .filter(_.userValue.nonEmpty || withDefaults)
+        .groupBy(arg => (arg.userValue.isEmpty, arg.isSpecial))
+        .toSeq
+        .sortBy(_._1)
+        .flatMap(_._2.map(_.toCommandLineString))
+      if (argStrings.isEmpty) this.name else this.name + " " + argStrings.mkString(" ")
+    }
+  }
 
   /**
     * Represents information about an argument to a command line program.
@@ -70,6 +90,9 @@ object Sopt {
     * @param defaultValues the seq of default values, as strings
     * @param sensitive if true the argument is sensitive and values should not be re-displayed
     * @param description the description of the argument
+    * @param isSpecial true if the argument is "special" (of type [[SpecialArgumentsCollection]], typically help or
+    *                  version), otherwise false.
+    * @param userValue the value(s) set by the user, [[None]] otherwise
     */
   case class Arg(name: String,
                  group: Option[String],
@@ -79,8 +102,17 @@ object Sopt {
                  maxValues: Int,
                  defaultValues: Seq[String],
                  sensitive: Boolean,
-                 description: String
-                ) extends MarkDownDescription
+                 description: String,
+                 isSpecial: Boolean,
+                 userValue: Option[Seq[String]]
+                ) extends MarkDownDescription {
+    /** Gets the command line string for this argument.  Will use the user specified values if present, otherwise the
+      * defaults if present, and otherwise prints the type.*/
+    def toCommandLineString: String = userValue match {
+      case Some(value) => s"--$name ${value.mkString(" ")}"
+      case None        => if (defaultValues.isEmpty) s"--$name <$kind>" else defaultValues.map(v => s"--$name $v").mkString(" ")
+    }
+  }
 
   /** Finds classes that extend the given type within the specified packages.
     *
@@ -100,10 +132,20 @@ object Sopt {
     * @tparam A the type of the class
     * @return a metadata object containing information about the command and it's arguments
     */
-  def inspect[A](clp: Class[A]): ClpMetadata = {
-    val parser = new CommandLineProgramParser(clp, includeSpecialArgs=false)
-    val clpAnn = ParsingUtil.findClpAnnotation(clp).getOrElse(throw new IllegalStateException("No @clp on " + clp.getName))
-    val args   = parser.argumentLookup.ordered.filter(_.annotation.isDefined).map ( a => Arg(
+  @deprecated(message="Use inspect()", since="0.6.0")
+  def inspect[A](clp: Class[A])(implicit typeTag: TypeTag[A]): ClpMetadata = inspect[A](parser = None)
+
+  /**
+    * Inspect a command class that is annotated with [[clp]] and [[arg]] annotations.
+    *
+    * @param parser optionally a parser to use to lookup the arguments.
+    * @tparam A the type of the CLP class
+    * @return a metadata object containing information about the command and it's arguments
+    */
+  def inspect[A](parser: Option[CommandLineProgramParser[A]] = None)(implicit typeTag: TypeTag[A]): ClpMetadata = {
+    val clp     = ReflectionUtil.typeTagToClass[A]
+    val _parser = parser.getOrElse(new CommandLineProgramParser(clp, includeSpecialArgs=false))
+    val args    = _parser.argumentLookup.ordered.filter(_.annotation.isDefined).map ( a => Arg(
       name          = a.longName,
       group         = a.groupName,
       flag          = a.shortName,
@@ -112,11 +154,12 @@ object Sopt {
       maxValues     = if (a.isCollection) a.maxElements else 1,
       defaultValues = ClpArgumentDefinitionPrinting.defaultValuesAsSeq(a.defaultValue),
       sensitive     = a.isSensitive,
-      description   = a.doc
+      description   = a.doc,
+      isSpecial     = a.isSpecial,
+      userValue     = if (a.hasValue && a.isSetByUser) Some(a.toArgs) else None
     ))
-    
-    val group = clpAnn.group().newInstance()
-
+    val clpAnn = ParsingUtil.findClpAnnotation(clp).getOrElse(throw new IllegalStateException("No @clp on " + clp.getName))
+    val group  = clpAnn.group().newInstance()
     ClpMetadata(
       name            = clp.getSimpleName,
       group           = Group(name=group.name, description=group.description, rank=group.rank),
