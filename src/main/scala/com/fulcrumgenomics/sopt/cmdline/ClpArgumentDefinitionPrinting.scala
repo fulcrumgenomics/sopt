@@ -178,7 +178,7 @@ object ClpArgumentDefinitionPrinting {
         case Success(constants) => constants
         case Failure(thr) => throw thr
       }
-      enumConstants.map(_.name).mkString(EnumOptionDocPrefix, ", ", EnumOptionDocSuffix)
+      enumConstants.map(_.name).sorted.mkString(EnumOptionDocPrefix, ", ", EnumOptionDocSuffix)
     }
     else {
       val symbol = scala.reflect.runtime.currentMirror.classSymbol(clazz)

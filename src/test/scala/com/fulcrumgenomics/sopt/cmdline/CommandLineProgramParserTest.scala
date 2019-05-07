@@ -677,11 +677,16 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
       .foreach(str => str.endsWith("argument=String") shouldBe false)
   }
 
-  it should "print enum values in the  usage" in {
+  it should "print enum values in the usage" in {
     val usage = parser(classOf[GoodEnumClass]).usage(withVersion = false, withSpecial = false)
-    GoodEnum.values.foreach(e =>
-      usage should include (e.name())
+    GoodEnum.values.foreach( e =>
+      e.name.r.findAllIn(usage).length shouldBe 1
     )
+  }
+
+  it should "print enum values in sorted order" in {
+    val usage: String = parser(classOf[GoodEnumClass]).usage(withVersion = false, withSpecial = false)
+    GoodEnum.values.map(_.toString).sorted.map(usage.indexOf) shouldBe sorted
   }
 
   it should "throw an exception when an enum has no values" in {
