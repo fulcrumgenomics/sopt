@@ -31,7 +31,7 @@ import com.fulcrumgenomics.sopt.util.{KCYN, KGRN, KYEL, MarkDownProcessor}
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.sopt.Sopt
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 object ClpArgumentDefinitionPrinting {
   /** Strings for printing enum options */
@@ -160,6 +160,10 @@ object ClpArgumentDefinitionPrinting {
     stringBuilder.append(KCYN(wrappedDescriptionBuilder.toString()))
   }
 
+  import scala.reflect.runtime.{universe => ru}
+  /** A runtime mirror for when it's necessary. */
+  private val mirror: ru.Mirror = scala.reflect.runtime.currentMirror
+
   /**
     * Returns the help string with details about valid options for the given argument class.
     *
@@ -183,7 +187,34 @@ object ClpArgumentDefinitionPrinting {
     else {
       val symbol = scala.reflect.runtime.currentMirror.classSymbol(clazz)
       if (symbol.isTrait && symbol.isSealed) {
-        symbol.knownDirectSubclasses.map(_.name.toString).mkString(EnumOptionDocPrefix, ", ", EnumOptionDocSuffix)
+        // Search the companion of the trait for the "values" or "findValues" method, that returns the values for the
+        // sealed trait hierarchy.  Otherwise just get the direct sub-classes of the trait.
+
+        // Get the companion
+        val companion = Try {
+          val companionObject = symbol.companion.asModule
+          val companionMirror = mirror.reflectModule(companionObject)
+          companionMirror.instance
+        }
+
+        // Get the values from the companion if possible
+        val companionValues = companion match {
+          case Failure(_) => None
+          case Success(_companion) =>
+            Iterator("values", "findValues").map { name =>
+              Try { _companion.getClass.getMethod(name).invoke(_companion).asInstanceOf[Seq[Any]].map(_.toString) }
+            }
+            .map {
+              case Success(_values) => _values
+              case Failure(_)       => Seq.empty
+            }
+            .find(_.nonEmpty)
+        }
+
+        // Default to the direct sub-classes of hte trait
+        companionValues
+          .getOrElse(symbol.knownDirectSubclasses.map(_.name.toString))
+          .mkString(EnumOptionDocPrefix, ", ", EnumOptionDocSuffix)
       }
       else {
         ""

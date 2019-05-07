@@ -31,11 +31,27 @@ import com.fulcrumgenomics.sopt.util.TermCode
 import com.fulcrumgenomics.sopt.util.UnitSpec
 import org.scalatest.BeforeAndAfterAll
 
-// Sealed case class hierarchy for testing possibleValues()
+// Sealed case class hierarchies for testing possibleValues()
 sealed trait Foo
 case object Hi extends Foo
 case object Lo extends Foo
 case object Whee extends Foo
+
+sealed trait Bar
+case object Alice extends Bar
+case object Bob extends Bar
+case object Eve extends Bar
+object Bar {
+  def values: Seq[Bar] = Seq(Alice, Eve, Bob)
+}
+
+sealed trait FooBar
+case object Jack extends FooBar
+case object Jill extends FooBar
+case object John extends FooBar
+object FooBar {
+  def findValues: Seq[FooBar] = Seq(John, Jill, Jack)
+}
 
 /**
   * Tests for ClpArgumentDefinitionPrinting.
@@ -91,5 +107,10 @@ class ClpArgumentDefinitionPrintingTest extends UnitSpec with BeforeAndAfterAll 
 
   "ClpArgumentDefinitionPrinting.possibleValues" should "find the possible values in a sealed trait/case object hierarchy" in {
     ClpArgumentDefinitionPrinting.possibleValues(classOf[Foo]) shouldBe "Options: Hi, Lo, Whee."
+  }
+
+  it should "find the possible values in a sealed trait/case object hierarchy with a values method" in {
+    ClpArgumentDefinitionPrinting.possibleValues(classOf[Bar]) shouldBe "Options: Alice, Eve, Bob."
+    ClpArgumentDefinitionPrinting.possibleValues(classOf[FooBar]) shouldBe "Options: John, Jill, Jack."
   }
 }
