@@ -26,12 +26,12 @@ package com.fulcrumgenomics.sopt.cmdline
 
 import java.util
 
-import com.fulcrumgenomics.commons.reflect.ReflectionUtil
-import com.fulcrumgenomics.sopt.util.{KCYN, KGRN, KYEL, MarkDownProcessor}
 import com.fulcrumgenomics.commons.CommonsDef._
+import com.fulcrumgenomics.commons.reflect.ReflectionUtil
 import com.fulcrumgenomics.sopt.Sopt
+import com.fulcrumgenomics.sopt.util.{KCYN, KGRN, KYEL, MarkDownProcessor}
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 object ClpArgumentDefinitionPrinting {
   /** Strings for printing enum options */
@@ -160,10 +160,6 @@ object ClpArgumentDefinitionPrinting {
     stringBuilder.append(KCYN(wrappedDescriptionBuilder.toString()))
   }
 
-  import scala.reflect.runtime.{universe => ru}
-  /** A runtime mirror for when it's necessary. */
-  private val mirror: ru.Mirror = scala.reflect.runtime.currentMirror
-
   /**
     * Returns the help string with details about valid options for the given argument class.
     *
@@ -176,49 +172,31 @@ object ClpArgumentDefinitionPrinting {
     * @return never { @code null}.
     */
   private[cmdline] def possibleValues(clazz: Class[_]): String = {
-    if (clazz.isEnum) {
-      val enumClass: Class[_ <: Enum[_ <: Enum[_]]] = clazz.asInstanceOf[Class[_ <: Enum[_ <: Enum[_]]]]
-      val enumConstants = ReflectionUtil.enumOptions(enumClass) match {
-        case Success(constants) => constants
-        case Failure(thr) => throw thr
-      }
-      enumConstants.map(_.name).mkString(EnumOptionDocPrefix, ", ", EnumOptionDocSuffix)
-    }
-    else {
-      val symbol = scala.reflect.runtime.currentMirror.classSymbol(clazz)
-      if (symbol.isTrait && symbol.isSealed) {
-        // Search the companion of the trait for the "values" or "findValues" method, that returns the values for the
-        // sealed trait hierarchy.  Otherwise just get the direct sub-classes of the trait.
-
-        // Get the companion
-        val companion = Try {
-          val companionObject = symbol.companion.asModule
-          val companionMirror = mirror.reflectModule(companionObject)
-          companionMirror.instance
+    val options = {
+      if (clazz.isEnum) {
+        val enumClass: Class[_ <: Enum[_ <: Enum[_]]] = clazz.asInstanceOf[Class[_ <: Enum[_ <: Enum[_]]]]
+        ReflectionUtil.enumOptions(enumClass) match {
+          case Success(constants) => Some(constants.map(_.name))
+          case Failure(thr)       => throw thr
         }
-
-        // Get the values from the companion if possible
-        val companionValues = companion match {
-          case Failure(_) => None
-          case Success(_companion) =>
-            Iterator("values", "findValues").map { name =>
-              Try { _companion.getClass.getMethod(name).invoke(_companion).asInstanceOf[Seq[Any]].map(_.toString) }
-            }
-            .map {
-              case Success(_values) => _values
-              case Failure(_)       => Seq.empty
-            }
-            .find(_.nonEmpty)
-        }
-
-        // Default to the direct sub-classes of hte trait
-        companionValues
-          .getOrElse(symbol.knownDirectSubclasses.map(_.name.toString))
-          .mkString(EnumOptionDocPrefix, ", ", EnumOptionDocSuffix)
       }
       else {
-        ""
+        val symbol = scala.reflect.runtime.currentMirror.classSymbol(clazz)
+        if (symbol.isTrait && symbol.isSealed) {
+          ReflectionUtil.sealedTraitOptions(clazz) match {
+            case Success(values) => Some(values)
+            case Failure(thr)    => throw thr
+          }
+        }
+        else {
+          None
+        }
       }
+    }
+
+    options match {
+      case Some(values) => values.mkString(EnumOptionDocPrefix, ", ", EnumOptionDocSuffix)
+      case None         => ""
     }
   }
 }
