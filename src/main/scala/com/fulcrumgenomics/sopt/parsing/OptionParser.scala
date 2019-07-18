@@ -39,11 +39,11 @@ import scala.util.{Failure, Success, Try}
   * similar methods.
   *
   * See the README.md for more information on valid arguments to [[OptionParser]]. */
-class OptionParser(val argFilePrefix: Option[String] = None) extends OptionLookup with Traversable[(OptionName, List[OptionValue])] {
-  private var remainingArgs: Traversable[String] = Nil
+class OptionParser(val argFilePrefix: Option[String] = None) extends OptionLookup with Iterable[(OptionName, List[OptionValue])] {
+  private var remainingArgs: Iterable[String] = Nil
 
   /** returns any remaining args that were not parsed in the previous call to `parse`. */
-  def remaining: Traversable[String] = remainingArgs
+  def remaining: Iterable[String] = remainingArgs
 
   /** Parse the given args. If an error was found, the first error is returned */
   def parse(args: String*): Try[this.type] = parse(args.toList)
@@ -78,11 +78,8 @@ class OptionParser(val argFilePrefix: Option[String] = None) extends OptionLooku
     parseRecursively(argTokenizer=argTokenizer, argTokenCollator=argTokenCollator)
   }
 
-  /** Applies the given function to the options with values.  If an error occurred in parsing, there will be no options */
-  override def foreach[U](f: ((OptionName, List[OptionValue])) => U): Unit = {
-    this.optionMap
-      .values.toList.distinct.filter(_.nonEmpty).foreach { optionValues =>
-      f(optionValues.optionNames.head, optionValues.toList)
-    }
+  /** Generates an iterator over options with values.  If an error occurred in parsing, there will be no options */
+  override def iterator: Iterator[(OptionName, List[OptionValue])] = {
+    this.optionMap.values.toSeq.distinct.filter(_.nonEmpty).iterator.map(o => (o.optionNames.head, o.toList))
   }
 }

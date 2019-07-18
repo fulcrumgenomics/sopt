@@ -31,6 +31,7 @@ import com.fulcrumgenomics.sopt.arg
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.collection.JavaConverters.asScala
 import scala.reflect.runtime.{universe => ru}
 import scala.util.{Failure, Success}
 
@@ -221,7 +222,7 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
 
     def nonEmpty: Boolean = !isEmpty
 
-    def values: Traversable[_] = (seq orElse set) map (_.toTraversable) getOrElse unwrapJavaCollection.toTraversable
+    def values: Iterable[_] = (seq orElse set) map (_.toIterable) getOrElse asScala(unwrapJavaCollection)
   }
 
   /** Validates that the required argument which is a collection is not empty and does not

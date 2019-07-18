@@ -85,8 +85,8 @@ lazy val commonSettings = Seq(
   organizationHomepage := Some(url("http://www.fulcrumgenomics.com")),
   homepage             := Some(url("http://github.com/fulcrumgenomics/sopt")),
   startYear            := Some(2015),
-  scalaVersion         := "2.12.8",
-  crossScalaVersions   := Seq("2.11.12", "2.12.8"),
+  scalaVersion         := "2.13.0",
+  crossScalaVersions   := Seq("2.12.8", "2.13.0"),
   scalacOptions        ++= Seq("-target:jvm-1.8", "-deprecation", "-unchecked"),
   scalacOptions in (Compile, doc) ++= docScalacOptions,
   scalacOptions in (Test, doc) ++= docScalacOptions,
@@ -116,11 +116,11 @@ lazy val root = Project(id="sopt", base=file("."))
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang"       %  "scala-reflect" %  scalaVersion.value,
-      "com.fulcrumgenomics"  %% "commons"       % "0.8.0-3087de3-SNAPSHOT",
+      "com.fulcrumgenomics"  %% "commons"       % "0.8.0-c052fc9-SNAPSHOT",
       "com.vladsch.flexmark" % "flexmark"       % "0.18.5",
 
       //---------- Test libraries -------------------//
-      "org.scalatest"             %% "scalatest"     % "3.0.1"  % "test->*" excludeAll ExclusionRule(organization="org.junit", name="junit")
+      "org.scalatest"             %% "scalatest"     % "3.0.8"  % "test->*" excludeAll ExclusionRule(organization="org.junit", name="junit")
     )
   )
 

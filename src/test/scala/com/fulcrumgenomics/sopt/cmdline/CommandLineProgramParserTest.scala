@@ -123,7 +123,7 @@ private case class ClassWithIntList
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private case class ClassWithSeq
-(@arg var aSeq: scala.collection.Seq[_] = Nil) extends CommandLineProgramTesting
+(@arg var aSeq: Seq[_] = Nil) extends CommandLineProgramTesting
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private case class ClassWithCollection

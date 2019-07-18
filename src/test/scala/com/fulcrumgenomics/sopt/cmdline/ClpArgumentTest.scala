@@ -52,7 +52,7 @@ class ClpArgumentTest extends UnitSpec with OptionValues {
 
   /** Helper function to create a single ClpArgument for a class with a single constructor arg. */
   def makeClpArgument(clazz : Class[_], defaultValue: Any) : ClpArgument = {
-    val arg = new ClpReflectiveBuilder(clazz).argumentLookup.view.head
+    val arg = new ClpReflectiveBuilder(clazz).argumentLookup.iterator.next
     arg.value = defaultValue
     arg
   }
@@ -218,7 +218,7 @@ class ClpArgumentTest extends UnitSpec with OptionValues {
   }
 
   it should "throw an IllegalStateException when creating an argument without an annotation with no default" in {
-    an[IllegalStateException] should be thrownBy new ClpReflectiveBuilder(classOf[NoAnnotationNoDefault]).argumentLookup.view.head
+    an[IllegalStateException] should be thrownBy new ClpReflectiveBuilder(classOf[NoAnnotationNoDefault]).argumentLookup.iterator.next
   }
 }
 

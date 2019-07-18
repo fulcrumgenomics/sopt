@@ -204,7 +204,7 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
         buffer.clear()
       }
 
-      lines
+      lines.toSeq
     }
     else {
       Seq(indent + chunk.text)

@@ -111,7 +111,7 @@ object ParsingUtil {
     }
 
     classToAnnotationMapFromSourceClasses[T](
-      srcClasses = classFinder.getClasses.toTraversable,
+      srcClasses = classFinder.getClasses.iterator().toSeq,
       omitSubClassesOf = omitSubClassesOf,
       includeHidden = includeHidden)
   }

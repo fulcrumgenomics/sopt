@@ -120,7 +120,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
       case Failure(ex: IllegalStateException) => throw ex
       case Failure(thr) => throw new CommandLineException(thr.getMessage + "\n" + thr.getStackTrace.mkString("\n"))
     }
-    clpReflectiveBuilder.argumentLookup.view.foreach(lookup.add)
+    clpReflectiveBuilder.argumentLookup.iterator.foreach(lookup.add)
     setMutexArguments(lookup=lookup)
   }
 
@@ -241,9 +241,10 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
     }
 
     // Get all the command line arguments in the order they were declared
-    val arguments: Seq[ClpArgument] = argumentLookup.view
+    val arguments: Seq[ClpArgument] = argumentLookup.iterator
       .filterNot { _.hidden }
       .filter { withSpecial || !_.isSpecial }
+      .toSeq
 
     // Get all the group names in the order they were first declared in a command line argument
     val groupNames = mutable.LinkedHashSet[String]()
@@ -315,7 +316,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
     */
   private def assertArgumentsAreValid(args: ClpArgumentLookup): Unit = {
     try {
-      args.view.foreach { argumentDefinition =>
+      args.iterator.foreach { argumentDefinition =>
         val fullName: String = argumentDefinition.longName
         val mutextArgumentNames: StringBuilder = new StringBuilder
 
@@ -332,7 +333,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
             .mkString(", ")
         )
         if (argumentDefinition.isSetByUser && mutextArgumentNames.nonEmpty) {
-          throw new UserException(s"Argument '$fullName' cannot be used in conjunction with argument(s): ${mutextArgumentNames.toString}")
+          throw UserException(s"Argument '$fullName' cannot be used in conjunction with argument(s): ${mutextArgumentNames.toString}")
         }
 
         if (argumentDefinition.isCollection && !argumentDefinition.optional) {

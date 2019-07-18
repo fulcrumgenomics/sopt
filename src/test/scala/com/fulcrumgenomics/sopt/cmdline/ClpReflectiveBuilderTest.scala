@@ -105,7 +105,7 @@ class ClpReflectiveBuilderTest extends UnitSpec {
 
   it should "throw an IllegalStateException when minElements or maxElements are given on a non-collection argument" in {
     val t = new ClpReflectiveBuilder(classOf[IntNoDefault])
-    t.argumentLookup.view.foreach { arg =>
+    t.argumentLookup.iterator.foreach { arg =>
       an[IllegalStateException] should be thrownBy arg.minElements
       an[IllegalStateException] should be thrownBy arg.maxElements
     }
@@ -123,28 +123,28 @@ class ClpReflectiveBuilderTest extends UnitSpec {
 
   "ClpReflectiveBuilder.toCommandLineString" should "throw an IllegalStateException when trying to print an argument with no value" in {
     val t = new ClpReflectiveBuilder(classOf[IntNoDefault])
-    t.argumentLookup.view.foreach {
+    t.argumentLookup.iterator.foreach {
       an[IllegalStateException] should be thrownBy _.toCommandLineString
     }
   }
 
   it should "print v if the argument type was an Option and the value was Some(v)" in {
     val t = new ClpReflectiveBuilder(classOf[DefaultWithSomeOption])
-    t.argumentLookup.view.foreach {
+    t.argumentLookup.iterator.foreach {
       _.toCommandLineString shouldBe "--w 4"
     }
   }
 
   it should "print the special none token for a None value" in {
     val t = new ClpReflectiveBuilder(classOf[DefaultWithOption])
-    t.argumentLookup.view.foreach {
+    t.argumentLookup.iterator.foreach {
       _.toCommandLineString shouldBe s"--w ${ReflectionUtil.SpecialEmptyOrNoneToken}"
     }
   }
 
   it should "print the special empty token for an empty collection" in {
     val t = new ClpReflectiveBuilder(classOf[NoValuesInCollection])
-    t.argumentLookup.view.foreach {
+    t.argumentLookup.iterator.foreach {
       _.toCommandLineString shouldBe s"--v ${ReflectionUtil.SpecialEmptyOrNoneToken}"
     }
   }
