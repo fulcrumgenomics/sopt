@@ -49,7 +49,7 @@ class ArgTokenizerTest extends UnitSpec {
 
   it should "return an [[EmptyArgumentException]] if an empty string is given" in {
     val tryVal = new ArgTokenizer("").next()
-    tryVal shouldBe 'failure
+    tryVal shouldBe Symbol("failure")
     an[OptionNameException] should be thrownBy (throw tryVal.failed.get)
   }
 
@@ -169,7 +169,7 @@ class ArgTokenizerTest extends UnitSpec {
     argList.foreach { args =>
       val tokenizer = new ArgTokenizer(args:_*)
       val tryVal = tokenizer.next()
-      tryVal shouldBe 'failure
+      tryVal shouldBe Symbol("failure")
       an[OptionNameException] should be thrownBy (throw tryVal.failed.get)
       tokenizer.takeRemaining shouldBe args
     }
@@ -178,7 +178,7 @@ class ArgTokenizerTest extends UnitSpec {
   it should "throw an [[OptionNameException]] when a long option ends with an equals ('--long=')" in {
     val tokenizer = new ArgTokenizer("--long=")
     val tryVal = tokenizer.next()
-    tryVal shouldBe 'failure
+    tryVal shouldBe Symbol("failure")
     an[OptionNameException] should be thrownBy (throw tryVal.failed.get)
   }
 

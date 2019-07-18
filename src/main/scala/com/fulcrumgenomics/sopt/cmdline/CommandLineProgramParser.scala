@@ -179,7 +179,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
       parser.parse(args.toList) match {
         case Success(_) =>
           // set the values
-          val parseResults: Traversable[ParseResult] = parser.map {
+          val parseResults: Iterable[ParseResult] = parser.map {
             case (name: String, values: List[String]) =>
               this.argumentLookup.forArg(name).foreach(arg => arg.setArgument(values:_*))
               ParseSuccess()
@@ -302,7 +302,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
     val commandLineString = argumentList
       .filterNot(_.isSpecial)
       .groupBy(!_.hasValue) // so that args with values come first
-      .flatMap { case (_, args) => args.map(_.toCommandLineString) }
+      .flatMap { case (_, args: Seq[ClpArgument]) => args.map(_.toCommandLineString) }
       .mkString(" ")
     if (commandLineString.isEmpty) toolName
     else s"$toolName $commandLineString"

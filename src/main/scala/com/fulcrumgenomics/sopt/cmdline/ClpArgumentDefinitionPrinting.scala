@@ -120,7 +120,7 @@ object ClpArgumentDefinitionPrinting {
       case None | Some(None) | Some(Nil)  => Seq.empty
       case Some(s) if Set.empty == s      => Seq.empty
       case Some(c) if c.isInstanceOf[util.Collection[_]] => c.asInstanceOf[util.Collection[_]].iterator.map(_.toString).toSeq
-      case Some(t) if t.isInstanceOf[Traversable[_]]     => t.asInstanceOf[Traversable[_]].toSeq.map(_.toString)
+      case Some(t) if t.isInstanceOf[Iterable[_]]     => t.asInstanceOf[Iterable[_]].toSeq.map(_.toString)
       case Some(Some(x)) => Seq(x.toString)
       case Some(x)       => Seq(x.toString)
     }

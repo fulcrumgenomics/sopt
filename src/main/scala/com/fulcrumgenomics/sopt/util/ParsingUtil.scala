@@ -52,7 +52,7 @@ object ParsingUtil {
     * @tparam T the super class.
     * @return a mapping between sub-classes of [[T]] and their [[clp]] annotation.
     */
-  private def classToAnnotationMapFromSourceClasses[T](srcClasses: Traversable[Class[_]],
+  private def classToAnnotationMapFromSourceClasses[T](srcClasses: Iterable[Class[_]],
                                                      omitSubClassesOf: Iterable[Class[_]] = Nil,
                                                      includeHidden: Boolean = false)
   : Map[Class[_ <: T], clp] = {
@@ -63,7 +63,7 @@ object ParsingUtil {
     }
 
     // Find all classes with the annotation
-    val classes: Traversable[Class[T]] = srcClasses
+    val classes: Iterable[Class[T]] = srcClasses
       .filter { keepClass }
       .filterNot { clazz => omitSubClassesOf.exists { _.isAssignableFrom(clazz) } }
       .filter {
@@ -120,7 +120,7 @@ object ParsingUtil {
     * found.
     */
   private[sopt] def findSmallestSimilarityDistance(target: String,
-                                                   options: Traversable[String],
+                                                   options: Iterable[String],
                                                    distances: mutable.Map[String, Integer] = new mutable.HashMap[String, Integer],
                                                    unknownSimilarityFloor: Int = 7,
                                                    unknownSubstringLength: Int = 5
@@ -151,7 +151,7 @@ object ParsingUtil {
 
   /** When a command does not match any known command, searches for similar commands, using the same method as GIT **/
   private def findSimilar(target: String,
-                          options: Traversable[String],
+                          options: Iterable[String],
                           unknownSimilarityFloor: Int = 7,
                           unknownSubstringLength: Int = 5
                          ): Seq[String] = {
@@ -173,7 +173,7 @@ object ParsingUtil {
 
   /** Finds all options that are similar to the target and returns a string of suggestions if any were found. */
   private[sopt] def printUnknown(target: String,
-                                 options: Traversable[String],
+                                 options: Iterable[String],
                                  unknownSimilarityFloor: Int = 7,
                                  unknownSubstringLength: Int = 5): String = {
     findSimilar(target=target, options=options, unknownSimilarityFloor=unknownSimilarityFloor, unknownSubstringLength=unknownSubstringLength) match {

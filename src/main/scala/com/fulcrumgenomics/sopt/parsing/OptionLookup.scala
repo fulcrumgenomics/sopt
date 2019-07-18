@@ -163,14 +163,14 @@ trait OptionLookup {
   }
 
   /** Gets all the option names with the given string as a prefix */
-  private def optionNamesWithPrefix(prefix: String): Traversable[String] = {
+  private def optionNamesWithPrefix(prefix: String): Iterable[String] = {
     this.optionNames.filter { name =>
       name.startsWith(prefix)
     }
   }
 
   /** Gets all the option  and values with the given string as a prefix of name */
-  private def optionAndValuesWithPrefix(prefix: String): Traversable[OptionAndValues] = {
+  private def optionAndValuesWithPrefix(prefix: String): Iterable[OptionAndValues] = {
     this.optionMap
       .filter { case (name, optionAndValues) => name.startsWith(prefix) }
       .map { case (name, optionAndValues) => optionAndValues }
@@ -226,7 +226,7 @@ trait OptionLookup {
   }
 
   /** Adds value(s) to the given option and returns all values for the given option */
-  protected[sopt] def addOptionValues(optionName: String, values: String*): Try[Traversable[String]] = {
+  protected[sopt] def addOptionValues(optionName: String, values: String*): Try[Iterable[String]] = {
     this.findExactOrPrefix(optionName) match {
       case Nil => Failure(IllegalOptionNameException(printUnknown(optionName)))
       case option :: Nil =>
