@@ -27,48 +27,48 @@ import com.fulcrumgenomics.sopt._
 import com.fulcrumgenomics.sopt.cmdline.TestGroup
 import com.fulcrumgenomics.sopt.cmdline.TestingClp
 
-abstract class CommandLineProgram extends TestingClp
+private[cmdline] abstract class CommandLineProgram extends TestingClp
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
-private[cmdline] class CommandLineProgramTesting extends CommandLineProgram
+private[cmdline] class BaseCommandLineProgramTesting extends CommandLineProgram // FIXME: why can't this be called CommandLineProgramTesting???
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private[cmdline] case class CommandLineProgramOne
-() extends CommandLineProgramTesting
+() extends BaseCommandLineProgramTesting
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private[cmdline] case class CommandLineProgramTwo
-() extends CommandLineProgramTesting
+() extends BaseCommandLineProgramTesting
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private[cmdline] case class CommandLineProgramThree
-(@arg var argument: String) extends CommandLineProgramTesting // argument should be required
+(@arg var argument: String) extends BaseCommandLineProgramTesting // argument should be required
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private[cmdline] case class CommandLineProgramFour
-(@arg var argument: String = "default", @arg var flag: Boolean = false) extends CommandLineProgramTesting
+(@arg var argument: String = "default", @arg var flag: Boolean = false) extends BaseCommandLineProgramTesting
 
 @clp(description = "This is a description", group = classOf[TestGroup], hidden = true)
 private[cmdline] case class CommandLineProgramReallyLongArg
 (
   @arg var argumentttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt: String
-) extends CommandLineProgramTesting
+) extends BaseCommandLineProgramTesting
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private[cmdline] case class CommandLineProgramShortArg
-(@arg var argument: String) extends CommandLineProgramTesting
+(@arg var argument: String) extends BaseCommandLineProgramTesting
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private[cmdline] case class CommandLineProgramWithMutex
-(@arg(mutex = Array("another")) var argument: String, @arg(mutex = Array("argument")) var another: String) extends CommandLineProgramTesting // argument should be required
+(@arg(mutex = Array("another")) var argument: String, @arg(mutex = Array("argument")) var another: String) extends BaseCommandLineProgramTesting // argument should be required
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
-private[cmdline] class CommandLineProgramNoArgs extends CommandLineProgramTesting
+private[cmdline] class CommandLineProgramNoArgs extends BaseCommandLineProgramTesting
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private[cmdline] case class CommandLineProgramWithOptionSomeDefault
-(@arg var argument: Option[String] = Some("default")) extends CommandLineProgramTesting
+(@arg var argument: Option[String] = Some("default")) extends BaseCommandLineProgramTesting
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private[cmdline] case class CommandLineProgramWithSeqDefault
-(@arg var argument: Seq[String] = Seq("default")) extends CommandLineProgramTesting
+(@arg var argument: Seq[String] = Seq("default")) extends BaseCommandLineProgramTesting
