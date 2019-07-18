@@ -26,7 +26,7 @@ package com.fulcrumgenomics.sopt.parsing
 
 import com.fulcrumgenomics.sopt._
 
-import scala.collection.Traversable
+import scala.collection.Iterable
 import scala.util.{Failure, Success, Try}
 
 /** Very simple command line parser.

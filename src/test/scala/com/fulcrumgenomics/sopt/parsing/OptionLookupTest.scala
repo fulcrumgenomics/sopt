@@ -122,8 +122,8 @@ class OptionLookupTest extends UnitSpec {
       val optionLookup = new OptionLookup {}.acceptFlag(names: _*).get
       names.foreach { name =>
         optionLookup.optionMap should contain key name
-        optionLookup.optionMap.get(name) shouldBe 'defined
-        optionLookup.optionMap.get(name).get.toList shouldBe 'empty
+        optionLookup.optionMap.get(name) shouldBe Symbol("defined")
+        optionLookup.optionMap.get(name).get.toList shouldBe Symbol("empty")
         optionLookup.optionMap.get(name).get.optionNames should contain(name)
         optionLookup.optionMap.get(name).get.optionType shouldBe OptionType.Flag
       }
@@ -131,12 +131,12 @@ class OptionLookupTest extends UnitSpec {
   }
 
   "OptionLookup.acceptsSingleValue" should "create a new argument value of type single value" in {
-    Stream(Stream[String]("s"), Stream[String]("single-argument"), Stream[String]("s", "single-argument")).foreach { names =>
+    Seq(Seq[String]("s"), Seq[String]("single-argument"), Seq[String]("s", "single-argument")).foreach { names =>
       val optionLookup = new OptionLookup {}.acceptSingleValue(names: _*).get
       names.foreach { name =>
         optionLookup.optionMap should contain key name
-        optionLookup.optionMap.get(name) shouldBe 'defined
-        optionLookup.optionMap.get(name).get.toList shouldBe 'empty
+        optionLookup.optionMap.get(name) shouldBe Symbol("defined")
+        optionLookup.optionMap.get(name).get.toList shouldBe Symbol("empty")
         optionLookup.optionMap.get(name).get.optionNames should contain(name)
         optionLookup.optionMap.get(name).get.optionType shouldBe OptionType.SingleValue
       }
@@ -144,12 +144,12 @@ class OptionLookupTest extends UnitSpec {
   }
 
   "OptionLookup.acceptsMultipleValues" should "create a new argument value of type multiple value" in {
-    Stream(Stream[String]("m"), Stream[String]("multi-argument"), Stream[String]("m", "multi-argument")).foreach { names =>
+    Seq(Seq[String]("m"), Seq[String]("multi-argument"), Seq[String]("m", "multi-argument")).foreach { names =>
       val optionLookup = new OptionLookup {}.acceptMultipleValues(names: _*).get
       names.foreach { name =>
         optionLookup.optionMap should contain key name
-        optionLookup.optionMap.get(name) shouldBe 'defined
-        optionLookup.optionMap.get(name).get.toList shouldBe 'empty
+        optionLookup.optionMap.get(name) shouldBe Symbol("defined")
+        optionLookup.optionMap.get(name).get.toList shouldBe Symbol("empty")
         optionLookup.optionMap.get(name).get.optionNames should contain(name)
         optionLookup.optionMap.get(name).get.optionType shouldBe OptionType.MultiValue
       }

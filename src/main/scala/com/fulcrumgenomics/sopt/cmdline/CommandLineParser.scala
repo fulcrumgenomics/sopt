@@ -157,7 +157,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
   def commandLine: Option[String] = _commandLine
 
   /** The error message for an unknown sub-command. */
-  private[cmdline] def unknownSubCommandErrorMessage(command: String, classes: Traversable[SubCommandClass] = Set.empty): String = {
+  private[cmdline] def unknownSubCommandErrorMessage(command: String, classes: Iterable[SubCommandClass] = Set.empty): String = {
     s"'$command' is not a valid sub-command. See $commandLineName --help for more information." + printUnknown(command, classes.map(_.getSimpleName))
   }
 
@@ -169,7 +169,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
     * @return the class of the sub-commands or an error string if either no arguments were given or no
     *         sub-command class matched the given argument.
     */
-  private def parseSubCommandName(args: Seq[String], classes: Traversable[SubCommandClass]): Either[SubCommandClass,String] = {
+  private def parseSubCommandName(args: Seq[String], classes: Iterable[SubCommandClass]): Either[SubCommandClass,String] = {
     if (args.length < 1) {
       Right(MissingSubCommand)
     }
@@ -188,7 +188,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
     * @param classes the classes corresponding to the sub-commands.
     * @param commandLineName the name of this sub-command.
     */
-  private[cmdline] def subCommandListUsage(classes: Traversable[SubCommandClass], commandLineName: String, withPreamble: Boolean): String = {
+  private[cmdline] def subCommandListUsage(classes: Iterable[SubCommandClass], commandLineName: String, withPreamble: Boolean): String = {
     val builder = new StringBuilder
 
     if (withPreamble) {
@@ -263,7 +263,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
     *                    unsuccessful.
     */
   def parseSubCommand(args: Seq[String],
-                      subcommands: Traversable[Class[_ <: SubCommand]],
+                      subcommands: Iterable[Class[_ <: SubCommand]],
                       withVersion: Boolean = true,
                       withSpecialArgs: Boolean = true, 
                       extraUsage: Option[String] = None): Result[_ <: SubCommand,Nothing] = {
@@ -357,7 +357,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
     *
     * @return the [[Command]] and [[SubCommand]] instances initialized with the command line arguments, or [[None]] if unsuccessful.
     */
-  def parseCommandAndSubCommand[Command](args: Seq[String], subcommands: Traversable[Class[_ <: SubCommand]])
+  def parseCommandAndSubCommand[Command](args: Seq[String], subcommands: Iterable[Class[_ <: SubCommand]])
                                         (implicit tt: TypeTag[Command]): Result[_ <: Command,_ <: SubCommand] = {
     val mainClazz: Class[Command] = ReflectionUtil.typeTagToClass[Command]
     val thisParser = this
@@ -420,7 +420,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
   /** Splits the given args into two Arrays, first splitting based on a "--", and if not found,
     * searching for a program name.  The "--" arg will not be returned.
     */
-  private[cmdline] def splitArgs(args: Seq[String], subcommands: Traversable[SubCommandClass]) : (Seq[String], Seq[String]) = {
+  private[cmdline] def splitArgs(args: Seq[String], subcommands: Iterable[SubCommandClass]) : (Seq[String], Seq[String]) = {
     if (args.isEmpty) return (args, Seq.empty)
 
     // first check for "--"

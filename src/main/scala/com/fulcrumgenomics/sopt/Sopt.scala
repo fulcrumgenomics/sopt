@@ -89,7 +89,7 @@ object Sopt {
     * @tparam A the type of the commands to find
     * @return the resulting set of command classes
     */
-  def find[A : ClassTag : TypeTag](packages: Traversable[String], includeHidden: Boolean = false): Seq[Class[_ <: A]] = {
+  def find[A : ClassTag : TypeTag](packages: Iterable[String], includeHidden: Boolean = false): Seq[Class[_ <: A]] = {
     ParsingUtil.findClpClasses[A](packages.toList, includeHidden=includeHidden).keys.toSeq
   }
 
@@ -138,7 +138,7 @@ object Sopt {
     */
   def parseCommand[Command: TypeTag : ClassTag](name: String,
                                                 args: Seq[String],
-                                                commands: Traversable[Class[_ <: Command]]): Result[_ <: Command,Nothing] = {
+                                                commands: Iterable[Class[_ <: Command]]): Result[_ <: Command,Nothing] = {
     new CommandLineParser[Command](name)parseSubCommand(args, commands)
   }
 
@@ -155,7 +155,7 @@ object Sopt {
     * @return the result of parsing the command
     */
   def parseCommandAndSubCommand[Command:TypeTag:ClassTag, SubCommand:TypeTag:ClassTag ]
-  (name: String, args: Seq[String], subcommands: Traversable[Class[_ <: SubCommand]]): Result[_ <: Command, _ <: SubCommand] = {
+  (name: String, args: Seq[String], subcommands: Iterable[Class[_ <: SubCommand]]): Result[_ <: Command, _ <: SubCommand] = {
     new CommandLineParser[SubCommand](name).parseCommandAndSubCommand[Command](args, subcommands)
   }
 }

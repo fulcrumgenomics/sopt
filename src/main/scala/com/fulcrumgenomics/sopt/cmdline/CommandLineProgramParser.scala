@@ -179,7 +179,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
       parser.parse(args.toList) match {
         case Success(_) =>
           // set the values
-          val parseResults: Traversable[ParseResult] = parser.map {
+          val parseResults: Iterable[ParseResult] = parser.map {
             case (name: String, values: List[String]) =>
               this.argumentLookup.forArg(name).foreach(arg => arg.setArgument(values:_*))
               ParseSuccess()

@@ -67,7 +67,7 @@ class ClpReflectiveBuilderTest extends UnitSpec {
     val t = new ClpReflectiveBuilder(classOf[IntDefault]).build(List(3))
     t.v shouldBe 3
     val tt = new ClpReflectiveBuilder(classOf[DefaultWithOption]).build(List(None))
-    tt.w shouldBe 'empty
+    tt.w shouldBe Symbol("empty")
     new ClpReflectiveBuilder(classOf[NoParams]).build(Nil)
     new ClpReflectiveBuilder(classOf[ComplexDefault]).build(List(StringDefault()))
   }
