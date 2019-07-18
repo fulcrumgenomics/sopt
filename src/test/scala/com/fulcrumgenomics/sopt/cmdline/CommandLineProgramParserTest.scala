@@ -43,7 +43,7 @@ import scala.util.Success
 ////////////////////////////////////////////////////////////////////////////////
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
-private class CommandLineProgramTesting(@arg var aStringSomething: String = "Default")
+private[cmdline] class CommandLineProgramTesting(@arg var aStringSomething: String = "Default")
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private case class ClassNoParams()
@@ -797,7 +797,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     )
     val p = parser(classOf[GeneralTestingProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
         ex.getMessage should include (classOf[UserException].getSimpleName)
     }
   }
@@ -811,7 +811,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     )
     val p = parser(classOf[GeneralTestingProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include (classOf[UserException].getSimpleName)
     }
   }
@@ -823,7 +823,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
       "-i", "1")
     val p = parser(classOf[GeneralTestingProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include (classOf[MissingArgumentException].getSimpleName)
     }
   }
@@ -832,7 +832,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val args = Seq[String]()
     val p = parser(classOf[CollectionRequired])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include (classOf[MissingArgumentException].getSimpleName)
     }
   }
@@ -841,7 +841,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val args = Seq[String]("--ints", "Foo")
     val p = parser(classOf[CollectionRequired])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getClass should be (classOf[BadArgumentValue])
     }
   }
@@ -850,7 +850,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val args = Seq[String]("--verbosity", "Foo")
     val p = parser(classOf[LogLevelEnumProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getClass should be (classOf[BadArgumentValue])
     }
   }
@@ -859,7 +859,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val args = Seq[String]("--verbosity", "Foo", "Bar")
     val p = parser(classOf[LogLevelEnumProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include ("verbosity")
     }
   }
@@ -868,7 +868,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val args = Seq[String]("--verbosity", "Foo", "--verbosity", "Bar")
     val p = parser(classOf[LogLevelEnumProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include ("verbosity")
     }
   }
@@ -884,7 +884,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
 
   def doFailingMutextTest(args: Seq[String]): Unit = {
     val parseResult = parser(classOf[MutexArguments]).parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) => }
+    inside (parseResult) { case ParseFailure(_, _) => }
   }
 
   it should "fail when specifying no arguments with arguments that are mutually exclusive" in {
@@ -1010,8 +1010,6 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should s"accept the version special flag (--version)" in {
-    val task = new ClassNoParams
-
     // try just with the flag
     var args = Seq[String]("--version")
     parser(classOf[ClassNoParams]).parseAndBuild(args=args) shouldBe ParseVersion()
@@ -1050,7 +1048,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val args = Seq[String]("@/path/to/nowhere")
     val p = parser(classOf[ClassWithInt])
     val parseResult = p.parseAndBuild(args = args)
-    inside(parseResult) { case ParseFailure(ex, remaining) =>
+    inside(parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include(CommandLineProgramParserStrings.CannotLoadArgumentFilesMessage)
     }
   }
@@ -1060,13 +1058,12 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     val args = Seq[String]("-a", "a", "-m", "m", "-n", "n", "-y", "y", "-z", "z")
     val p = parser(task.getClass)
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include (classOf[UserException].getSimpleName)
     }
   }
 
   "CommandLineProgramParser.getCommandLine" should "return the command line string" in {
-    val task = new GeneralTestingProgram
     val args = Seq[String](
       "--string-set", "Foo", "Bar",
       "--int-set", "1", "2",

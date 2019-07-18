@@ -391,7 +391,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
     // Try parsing and building CommandClass and handle the outcomes
     /////////////////////////////////////////////////////////////////////////
     mainClassParser.parseAndBuild(args=mainClassArgs) match {
-      case ParseFailure(ex, remaining) => // Case (1)
+      case ParseFailure(ex, _) => // Case (1)
         print(mainClassParser.usage())
         print(wrapError(ex.getMessage))
         Failure(() => usagePrinter.toString())

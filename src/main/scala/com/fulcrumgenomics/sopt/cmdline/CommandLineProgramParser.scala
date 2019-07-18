@@ -302,7 +302,7 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
     val commandLineString = argumentList
       .filterNot(_.isSpecial)
       .groupBy(!_.hasValue) // so that args with values come first
-      .flatMap { case (_, args) => args.map(_.toCommandLineString) }
+      .flatMap { case (_, args: Seq[ClpArgument]) => args.map(_.toCommandLineString) }
       .mkString(" ")
     if (commandLineString.isEmpty) toolName
     else s"$toolName $commandLineString"
