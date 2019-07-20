@@ -43,7 +43,7 @@ import scala.util.Success
 ////////////////////////////////////////////////////////////////////////////////
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
-private class CommandLineProgramTesting(@arg var aStringSomething: String = "Default")
+private[cmdline] class CommandLineProgramTesting(@arg var aStringSomething: String = "Default")
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private case class ClassNoParams()
@@ -123,7 +123,7 @@ private case class ClassWithIntList
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private case class ClassWithSeq
-(@arg var aSeq: scala.collection.Seq[_] = Nil) extends CommandLineProgramTesting
+(@arg var aSeq: Seq[_] = Nil) extends CommandLineProgramTesting
 
 @clp(description = "", group = classOf[TestGroup], hidden = true)
 private case class ClassWithCollection
@@ -436,7 +436,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     lookup.names should have size (1+numSpecialArguments)
     lookup.names should contain ("an-option")
     val argumentDefinition: ClpArgument = lookup.forArg("an-option").get
-    argumentDefinition.value.get.asInstanceOf[Option[_]] shouldBe 'empty
+    argumentDefinition.value.get.asInstanceOf[Option[_]] shouldBe Symbol("empty")
     argumentDefinition.argumentType shouldBe classOf[Option[_]]
     argumentDefinition.hasValue shouldBe false
   }
@@ -690,7 +690,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
 
   it should "format a long description" in {
     val usage = parser(classOf[SomeDescription]).usage(withVersion = true, withSpecial = false)
-    val line  = usage.lines.find(l => l.startsWith("<START>") && l.endsWith("<END>"))
+    val line  = usage.linesIterator.find(l => l.startsWith("<START>") && l.endsWith("<END>"))
     line.isDefined shouldBe true
   }
 
@@ -718,7 +718,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     // Check that these sections exist, and are found in the given order
     Seq(oneRequiredIndex, oneOptionalIndex, twoRequiredIndex, threeOptionalIndex, defaultOptionalIndex)
       .sliding(2)
-      .foreach { case Seq(leftIndex, rightIndex) =>
+      .foreach { case Seq(leftIndex: Int, rightIndex: Int) =>
         leftIndex should be >= (-1)
         rightIndex should be >= (-1)
         leftIndex should be < rightIndex
@@ -726,7 +726,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   "CommandLineProgramParser.parseAndBuild" should "parse multiple positional arguments" in {
-    val args = Array[String](
+    val args = Seq[String](
       "--string-set", "Foo", "Bar",
       "--int-set", "1", "2",
       "--int-arg", "1",
@@ -747,7 +747,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "parse a flag argument" in {
-    val args = Array[String](
+    val args = Seq[String](
       "--string-set", "Foo", "Bar",
       "--int-set", "1", "2",
       "-i", "1",
@@ -768,7 +768,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "parse an argument that has a space" in {
-    val args = Array[String](
+    val args = Seq[String](
       "--string-set", "Foo Foo", "Bar Bar",
       "--int-set", "1", "2",
       "-i", "1",
@@ -789,7 +789,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "fail if too few positional arguments are given" in {
-    val args = Array[String](
+    val args = Seq[String](
       "--string-set", "Foo",
       "--int-set", "1", "2",
       "-i", "1",
@@ -797,13 +797,13 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     )
     val p = parser(classOf[GeneralTestingProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
         ex.getMessage should include (classOf[UserException].getSimpleName)
     }
   }
 
   it should "fail if too many positional arguments are given" in {
-    val args = Array[String](
+    val args = Seq[String](
       "--string-set", "Foo", "Bar", "Fum",
       "--int-set", "1", "2",
       "-i", "1",
@@ -811,70 +811,70 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     )
     val p = parser(classOf[GeneralTestingProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include (classOf[UserException].getSimpleName)
     }
   }
 
   it should "fail when there is a missing required argument" in {
-    val args = Array[String](
+    val args = Seq[String](
       "--string-set", "Foo", "Bar",
       "--int-set", "1", "2",
       "-i", "1")
     val p = parser(classOf[GeneralTestingProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include (classOf[MissingArgumentException].getSimpleName)
     }
   }
 
   it should "fail when there is a missing required collection argument" in {
-    val args = Array[String]()
+    val args = Seq[String]()
     val p = parser(classOf[CollectionRequired])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include (classOf[MissingArgumentException].getSimpleName)
     }
   }
 
   it should "fail when there is a bad argument value" in {
-    val args = Array[String]("--ints", "Foo")
+    val args = Seq[String]("--ints", "Foo")
     val p = parser(classOf[CollectionRequired])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getClass should be (classOf[BadArgumentValue])
     }
   }
 
   it should "fail when there is a bad argument enum value" in {
-    val args = Array[String]("--verbosity", "Foo")
+    val args = Seq[String]("--verbosity", "Foo")
     val p = parser(classOf[LogLevelEnumProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getClass should be (classOf[BadArgumentValue])
     }
   }
 
   it should "fail when there multiple position argument values are given to a non-collection argument" in {
-    val args = Array[String]("--verbosity", "Foo", "Bar")
+    val args = Seq[String]("--verbosity", "Foo", "Bar")
     val p = parser(classOf[LogLevelEnumProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include ("verbosity")
     }
   }
 
   it should "fail when a non-collection argument is specified more than once" in {
-    val args = Array[String]("--verbosity", "Foo", "--verbosity", "Bar")
+    val args = Seq[String]("--verbosity", "Foo", "--verbosity", "Bar")
     val p = parser(classOf[LogLevelEnumProgram])
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include ("verbosity")
     }
   }
 
   it should "accept mutex arguments" in {
-    val args = Array[String]("-a", "1", "-b", "2")
+    val args = Seq[String]("-a", "1", "-b", "2")
     val p = parser(classOf[MutexArguments])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val task = p.instance.get
@@ -882,25 +882,25 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
     task.B shouldBe "2"
   }
 
-  def doFailingMutextTest(args: Array[String]): Unit = {
+  def doFailingMutextTest(args: Seq[String]): Unit = {
     val parseResult = parser(classOf[MutexArguments]).parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) => }
+    inside (parseResult) { case ParseFailure(_, _) => }
   }
 
   it should "fail when specifying no arguments with arguments that are mutually exclusive" in {
-    doFailingMutextTest(Array[String]())
+    doFailingMutextTest(Seq[String]())
   }
 
   it should "fail when specifying only one argument with arguments that are mutually exclusive" in {
-    doFailingMutextTest(Array[String]("-A", "1"))
+    doFailingMutextTest(Seq[String]("-A", "1"))
   }
 
   it should "fail when specifying arguments that are mutually exclusive" in {
-    doFailingMutextTest(Array[String]("-A", "1", "-Y", "3"))
+    doFailingMutextTest(Seq[String]("-A", "1", "-Y", "3"))
   }
 
   it should "fail when specifying multiple arguments with arguments that are mutually exclusive" in {
-    doFailingMutextTest(Array[String]("-A", "1", "-B", "2", "-Y", "3", "-Z", "1", "-M", "2", "-N", "3"))
+    doFailingMutextTest(Seq[String]("-A", "1", "-B", "2", "-Y", "3", "-Z", "1", "-M", "2", "-N", "3"))
   }
 
   it should "throw a BadAnnotationException when an argument named in a mutex cannot be found" in {
@@ -908,7 +908,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "accept arguments with uninitialized collections" in {
-    val args = Array[String](
+    val args = Seq[String](
       "--seq", "A",
       "--set", "B",
       "--collection", "C"
@@ -922,14 +922,14 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "throw a CommandLineException with a Map[String,String] argument type" in {
-    val args = Array[String](
+    val args = Seq[String](
       "--map", "a b"
     )
     an[CommandLineException] should be thrownBy parser(classOf[MapCollectionArgument]).parseAndBuild(args=args)
   }
 
   it should "accept a collection with default values" in {
-    val args = Array[String]()
+    val args = Seq[String]()
     val p = parser(classOf[CollectionWithDefaults])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val task = p.instance.get
@@ -937,7 +937,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "clear a collection with default values and add new values" in {
-    val args = Array[String]("--seq", "new_value")
+    val args = Seq[String]("--seq", "new_value")
     val p = parser(classOf[CollectionWithDefaults])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val task = p.instance.get
@@ -945,7 +945,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "replace defaults in a collection" in {
-    val args = Array[String]("--seq", "D", "E")
+    val args = Seq[String]("--seq", "D", "E")
     val p = parser(classOf[CollectionWithDefaults])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val task = p.instance.get
@@ -954,13 +954,13 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
 
   it should "accept a flag with no argument" in {
     val p = parser(classOf[FlagClass])
-    p.parseAndBuild(args = Array("--flag1")) shouldBe ParseSuccess()
+    p.parseAndBuild(args = Seq("--flag1")) shouldBe ParseSuccess()
     val task = p.instance.get
     task.flag1 shouldBe true
   }
 
   it should "accept flags with with arguments" in {
-    val args = Array[String]("--flag1", "true", "--flag2", "false")
+    val args = Seq[String]("--flag1", "true", "--flag2", "false")
     val p = parser(classOf[FlagClass])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val task = p.instance.get
@@ -969,7 +969,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "accept flags with with short-form arguments" in {
-    val args = Array[String]("--flag1", "T", "--flag2", "F")
+    val args = Seq[String]("--flag1", "T", "--flag2", "F")
     val p = parser(classOf[FlagClass])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val task = p.instance.get
@@ -978,7 +978,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "accept flags with a combination of arguments and no arguments" in {
-    val args = Array[String]("--flag1", "T", "--flag2")
+    val args = Seq[String]("--flag1", "T", "--flag2")
     val p = parser(classOf[FlagClass])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val task = p.instance.get
@@ -987,7 +987,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "accept setting private arguments" in {
-    val args = Array[String]("--private-flag", "T", "--private-seq", "1", "2", "3", "4", "5")
+    val args = Seq[String]("--private-flag", "T", "--private-seq", "1", "2", "3", "4", "5")
     val p = parser(classOf[PrivateArguments])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val task = p.instance.get
@@ -997,77 +997,74 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
 
   it should s"accept the help special flag (--help)" in {
     // try just with the flag
-    var args = Array[String]("--help")
+    var args = Seq[String]("--help")
     parser(classOf[ClassNoParams]).parseAndBuild(args=args) shouldBe ParseHelp()
 
     // try with the flag and true arg
-    args = Array[String]("--help", "true")
+    args = Seq[String]("--help", "true")
     parser(classOf[ClassNoParams]).parseAndBuild(args=args) shouldBe ParseHelp()
 
     // try with the flag and false arg
-    args = Array[String]("--help", "false")
+    args = Seq[String]("--help", "false")
     parser(classOf[ClassNoParams]).parseAndBuild(args=args) shouldBe ParseSuccess()
   }
 
   it should s"accept the version special flag (--version)" in {
-    val task = new ClassNoParams
-
     // try just with the flag
-    var args = Array[String]("--version")
+    var args = Seq[String]("--version")
     parser(classOf[ClassNoParams]).parseAndBuild(args=args) shouldBe ParseVersion()
 
     // try with the flag and true arg
-    args = Array[String]("--version", "true")
+    args = Seq[String]("--version", "true")
     parser(classOf[ClassNoParams]).parseAndBuild(args=args) shouldBe ParseVersion()
 
     // try with the flag and false arg
-    args = Array[String]("--version", "false")
+    args = Seq[String]("--version", "false")
     parser(classOf[ClassNoParams]).parseAndBuild(args=args) shouldBe ParseSuccess()
   }
 
   it should "accept a val argument" in {
-    val args = Array[String]("--flag")
+    val args = Seq[String]("--flag")
     val p = parser(classOf[ValFlagClass])
     p.parseAndBuild(args=args) shouldBe ParseSuccess()
     p.instance.get.flag shouldBe true
   }
 
   it should "accept an argument without a val/var declaration" in {
-    val args = Array[String]("--flag")
+    val args = Seq[String]("--flag")
     val p = parser(classOf[NoVarFlagClass])
     p.parseAndBuild(args=args) shouldBe ParseSuccess()
     p.instance.get.flag shouldBe true
   }
 
   it should "accept a boolean argument with --flag=false" in {
-    val args = Array[String]("--flag=true")
+    val args = Seq[String]("--flag=true")
     val p = parser(classOf[NoVarFlagClass])
     p.parseAndBuild(args=args) shouldBe ParseSuccess()
     p.instance.get.flag shouldBe true
   }
 
   it should "fail when it cannot load an arguments file" in {
-    val args = Array[String]("@/path/to/nowhere")
+    val args = Seq[String]("@/path/to/nowhere")
     val p = parser(classOf[ClassWithInt])
     val parseResult = p.parseAndBuild(args = args)
-    inside(parseResult) { case ParseFailure(ex, remaining) =>
+    inside(parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include(CommandLineProgramParserStrings.CannotLoadArgumentFilesMessage)
     }
   }
 
   it should "throw a UserException when mutually exclusive arguments are used" in {
     val task = new MutexArguments
-    val args = Array[String]("-a", "a", "-m", "m", "-n", "n", "-y", "y", "-z", "z")
+    val args = Seq[String]("-a", "a", "-m", "m", "-n", "n", "-y", "y", "-z", "z")
     val p = parser(task.getClass)
     val parseResult = p.parseAndBuild(args=args)
-    inside (parseResult) { case ParseFailure(ex, remaining) =>
+    inside (parseResult) { case ParseFailure(ex, _) =>
       ex.getMessage should include (classOf[UserException].getSimpleName)
     }
   }
 
   "CommandLineProgramParser.getCommandLine" should "return the command line string" in {
-    val task = new GeneralTestingProgram
-    val args = Array[String](
+    val args = Seq[String](
       "--string-set", "Foo", "Bar",
       "--int-set", "1", "2",
       "-i", "1",
@@ -1082,7 +1079,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
 
   it should "return the command line string but not show a sensitive arg" in {
     val task = new SensitiveArgTestingProgram
-    val args = Array[String]()
+    val args = Seq[String]()
     val p = parser(classOf[SensitiveArgTestingProgram])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val commandLine: String = p.commandLine()
@@ -1091,7 +1088,7 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
 
   it should "return the command line string having options with no value at the end" in {
     val task = new NoneTestingProgram
-    val args = Array[String]()
+    val args = Seq[String]()
     val p = parser(classOf[NoneTestingProgram])
     inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
     val commandLine: String = p.commandLine()

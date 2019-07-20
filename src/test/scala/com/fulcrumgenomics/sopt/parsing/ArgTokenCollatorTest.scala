@@ -116,7 +116,7 @@ class ArgTokenCollatorTest extends UnitSpec {
       val collator = new ArgTokenCollator(new ArgTokenizer(args))
       collator.hasNext shouldBe true
       val nextVal = collator.next
-      nextVal shouldBe 'success
+      nextVal shouldBe Symbol("success")
       nextVal.get shouldBe ArgOptionAndValues(name="n", values=Seq("value"))
       collator.takeRemaining shouldBe Seq("", "-s")
     }
@@ -124,10 +124,10 @@ class ArgTokenCollatorTest extends UnitSpec {
       val collator = new ArgTokenCollator(new ArgTokenizer(args))
       collator.hasNext shouldBe true
       var nextVal = collator.next
-      nextVal shouldBe 'success
+      nextVal shouldBe Symbol("success")
       nextVal.get shouldBe ArgOptionAndValues(name="n", values=Seq("value"))
       nextVal = collator.next
-      nextVal shouldBe 'failure
+      nextVal shouldBe Symbol("failure")
       collator.takeRemaining shouldBe Seq("", "-s")
     }
     {

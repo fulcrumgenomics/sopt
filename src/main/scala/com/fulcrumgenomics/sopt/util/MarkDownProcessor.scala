@@ -156,12 +156,12 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
     case item: OrderedListItem =>
       val children = item.getChildren.toSeq
       val text     = process(children.head, indent)
-      val prefix   = listPosition + ". "
+      val prefix   = s"$listPosition. "
       val bullet   = Chunk.wrappable(indent, prefix + text.mkString).withGutter(prefix.length)
       val subs     = children.tail.flatMap(c => withoutTrailingEmptyLine(process(c, indent)))
       bullet +: subs
     case code : FencedCodeBlock =>
-      code.getContentChars.toString.lines.toSeq.flatMap(line => Chunk.unwrappable(indent+1, line)) ++ Seq(Chunk.empty)
+      code.getContentChars.toString.linesIterator.toSeq.flatMap(line => Chunk.unwrappable(indent+1, line)) ++ Seq(Chunk.empty)
     case quote: BlockQuote =>
       val lines = quote.getChildren.flatMap(c => process(c, indent))
       val text  = lines.mkString
@@ -204,7 +204,7 @@ class MarkDownProcessor(lineLength: Int = 80, indentSize: Int = 2) {
         buffer.clear()
       }
 
-      lines
+      lines.toSeq
     }
     else {
       Seq(indent + chunk.text)

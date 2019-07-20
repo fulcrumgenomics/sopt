@@ -79,7 +79,7 @@ class ParsingUtilTest extends UnitSpec with OptionValues with PrivateMethodTeste
 //    getFieldClass("list", classOf[WithJavaCollection]) shouldBe classOf[Any]
 //    getFieldClass("v", classOf[WithOption]) shouldBe classOf[Any]
 //    getFieldClass("v", classOf[WithIntOption]) shouldBe classOf[Int]
-////    getFieldClass("v", classOf[WithInt]) shouldBe 'empty
+////    getFieldClass("v", classOf[WithInt]) shouldBe Symbol("empty")
 //    getFieldClass("path", classOf[WithPathToBamOption]) shouldBe classOf[PathToBam]
 //    an[CommandLineException] should be thrownBy getFieldClass("doesNotExist", classOf[WithInt])
 //    an[CommandLineException] should be thrownBy getFieldClass("map", classOf[WithMap]) // multiple generic types!

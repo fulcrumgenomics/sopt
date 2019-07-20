@@ -36,4 +36,4 @@ case class ParseHelp() extends ParseResult
 case class ParseVersion() extends ParseResult
 
 /** Class that indicates a failure in parsing.  An exception and the remaining arguments, if applicable, are provied. */
-case class ParseFailure(ex: Exception, remaining: Traversable[String]) extends ParseResult
+case class ParseFailure(ex: Exception, remaining: Iterable[String]) extends ParseResult

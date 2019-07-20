@@ -24,7 +24,7 @@
 
 package com.fulcrumgenomics.sopt.cmdline
 
-import com.fulcrumgenomics.commons.CommonsDef._
+import com.fulcrumgenomics.commons.CommonsDef.javaIteratorAsScalaIterator
 import com.fulcrumgenomics.commons.reflect.{Argument, ArgumentLookup, ReflectionUtil, ReflectiveBuilder}
 import com.fulcrumgenomics.commons.util.StringUtil
 import com.fulcrumgenomics.sopt.arg
@@ -221,7 +221,7 @@ private[sopt] class ClpArgument(declaringClass: Class[_],
 
     def nonEmpty: Boolean = !isEmpty
 
-    def values: Traversable[_] = (seq orElse set) map (_.toTraversable) getOrElse unwrapJavaCollection.toTraversable
+    def values: Iterable[_] = ((seq orElse set) getOrElse unwrapJavaCollection.iterator.toIterator).toIterable
   }
 
   /** Validates that the required argument which is a collection is not empty and does not

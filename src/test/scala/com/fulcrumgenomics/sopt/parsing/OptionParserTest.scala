@@ -115,7 +115,7 @@ class OptionParserTest extends UnitSpec with PrivateMethodTester {
 
   it should "parse multiple long option names with their values separated by an equals sign, when there value is of length one" in {
     val parser = new OptionParser().acceptSingleValue("single-a").get.acceptSingleValue("single-b").get
-    parser.parse("--single-b=3", "--single-a=1") shouldBe 'success
+    parser.parse("--single-b=3", "--single-a=1") shouldBe Symbol("success")
     parser should have size 2
     parser.foreach { case (observedArgument, optionValues) =>
       val found = observedArgument match {
@@ -138,7 +138,7 @@ class OptionParserTest extends UnitSpec with PrivateMethodTester {
 
   "OptionParser" should "should parse a basic command line" in {
     val parser = new OptionParser().acceptFlag("f").get.acceptSingleValue("s").get.acceptMultipleValues("m").get
-    parser.parse("-f", "false", "-s", "single-value", "-m", "multi-value-1", "multi-value-2") shouldBe 'success
+    parser.parse("-f", "false", "-s", "single-value", "-m", "multi-value-1", "multi-value-2") shouldBe Symbol("success")
     parser should have size 3
     parser.foreach { case (observedArgument, optionValues) =>
       val found = observedArgument match {
@@ -161,7 +161,7 @@ class OptionParserTest extends UnitSpec with PrivateMethodTester {
   it should "should parse a very basic command line" in {
     List(true, false).foreach { strict =>
       val parser = new OptionParser().acceptFlag("f").get.acceptSingleValue("s").get.acceptMultipleValues("m").get
-      parser.parse("-f", "-s", "single-value", "-m", "multi-value-1", "multi-value-2") shouldBe 'success
+      parser.parse("-f", "-s", "single-value", "-m", "multi-value-1", "multi-value-2") shouldBe Symbol("success")
       parser should have size 3
       parser.foreach { case (observedArgument, optionValues) =>
         val found = observedArgument match {
@@ -187,7 +187,7 @@ class OptionParserTest extends UnitSpec with PrivateMethodTester {
     List(true, false).foreach { strict =>
       List(List[String]("-f"), List[String]("-f", "false"), List[String]("-f=false")).foreach { args =>
         val parser = new OptionParser().acceptFlag("f").get.acceptSingleValue("s").get.acceptMultipleValues("m").get
-        parser.parse(args: _*) shouldBe 'success
+        parser.parse(args: _*) shouldBe Symbol("success")
         parser should have size 1
         parser.foreach { case (observedArgument, optionValues) =>
           val found = observedArgument match {
@@ -203,7 +203,7 @@ class OptionParserTest extends UnitSpec with PrivateMethodTester {
           }
           found shouldBe true
         }
-        parser.remaining shouldBe 'empty
+        parser.remaining shouldBe Symbol("empty")
       }
     }
   }
@@ -212,28 +212,28 @@ class OptionParserTest extends UnitSpec with PrivateMethodTester {
     {
       val args = List("val0")
       val parser = new OptionParser().acceptSingleValue("t").get.acceptSingleValue("s").get.acceptSingleValue("u").get
-      parser.parse(args: _*) shouldBe 'failure
+      parser.parse(args: _*) shouldBe Symbol("failure")
       parser.remaining should have size 1
       parser.remaining should be(List("val0"))
     }
     {
       val args = List("-s", "val1", "val2")
       val parser = new OptionParser().acceptSingleValue("s").get
-      parser.parse(args: _*) shouldBe 'failure
+      parser.parse(args: _*) shouldBe Symbol("failure")
       parser.remaining should have size 3
       parser.remaining should be(List("-s", "val1", "val2"))
     }
     {
       val args = List("-t", "val0", "-s", "val1", "val2")
       val parser = new OptionParser().acceptSingleValue("t").get.acceptSingleValue("s").get
-      parser.parse(args: _*) shouldBe 'failure
+      parser.parse(args: _*) shouldBe Symbol("failure")
       parser.remaining should have size 3
       parser.remaining should be(List("-s", "val1", "val2"))
     }
     {
       val args = List("-t", "val0", "-s", "val1", "val2", "-u", "val3")
       val parser = new OptionParser().acceptSingleValue("t").get.acceptSingleValue("s").get.acceptSingleValue("u").get
-      parser.parse(args: _*) shouldBe 'failure
+      parser.parse(args: _*) shouldBe Symbol("failure")
       parser.remaining should have size 5
       parser.remaining should be(List("-s", "val1", "val2", "-u", "val3"))
     }

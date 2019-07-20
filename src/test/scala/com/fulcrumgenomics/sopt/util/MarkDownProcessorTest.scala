@@ -173,7 +173,7 @@ class MarkDownProcessorTest extends UnitSpec {
         |This is another line.
       """.trim.stripMargin
 
-    proc.toText(proc.parse(markdown)) shouldBe markdown.lines.toSeq
+    proc.toText(proc.parse(markdown)) shouldBe markdown.linesIterator.toSeq
   }
 
   "MarkDownProcessor.toText" should "convert markdown to text ignoring trailing terminal codes" in {
