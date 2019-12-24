@@ -83,6 +83,47 @@ class ClpArgumentDefinitionPrintingTest extends UnitSpec with BeforeAndAfterAll 
     makeDefaultValueString(Some(List("A", "B", "C"))) shouldBe "[[Default: A, B, C]]."
   }
 
+  it should "print non-printing characters as human readable defaults" in {
+    makeDefaultValueString(Some('\t')) shouldBe """[[Default: \t]]."""
+    makeDefaultValueString(Some('\b')) shouldBe """[[Default: \b]]."""
+    makeDefaultValueString(Some('\n')) shouldBe """[[Default: \n]]."""
+    makeDefaultValueString(Some('\r')) shouldBe """[[Default: \r]]."""
+    makeDefaultValueString(Some('\f')) shouldBe """[[Default: \f]]."""
+  }
+
+  it should "print non-printing strings as human readable defaults" in {
+    makeDefaultValueString(Some("\t\t")) shouldBe """[[Default: \t\t]]."""
+    makeDefaultValueString(Some("\r\n")) shouldBe """[[Default: \r\n]]."""
+  }
+
+  it should "print optional non-printing characters as human readable defaults" in {
+    makeDefaultValueString(Some(Some('\t'))) shouldBe """[[Default: \t]]."""
+    makeDefaultValueString(Some(Some('\n'))) shouldBe """[[Default: \n]]."""
+  }
+
+  it should "print optional non-printing strings as human readable defaults" in {
+    makeDefaultValueString(Some(Some("\t"))) shouldBe """[[Default: \t]]."""
+    makeDefaultValueString(Some(Some("\r\n"))) shouldBe """[[Default: \r\n]]."""
+  }
+
+  it should "print optional non-printing characters in options as human readable defaults" in {
+    makeDefaultValueString(Some(Some(Some('\t')))) shouldBe """[[Default: Some(\t)]]."""
+    makeDefaultValueString(Some(Some(Some('\n')))) shouldBe """[[Default: Some(\n)]]."""
+  }
+
+  it should "print optional non-printing strings in options as human readable defaults" in {
+    makeDefaultValueString(Some(Some(Some("\t")))) shouldBe """[[Default: Some(\t)]]."""
+    makeDefaultValueString(Some(Some(Some("\r\n")))) shouldBe """[[Default: Some(\r\n)]]."""
+  }
+
+  it should "print a collection of non-printing characters as human readable defaults" in {
+    makeDefaultValueString(Some(Seq('\t', '\r', '\b'))) shouldBe """[[Default: \t, \r, \b]]."""
+  }
+
+  it should "print a collection of non-printing strings as human readable defaults" in {
+    makeDefaultValueString(Some(Seq("\t\t", "\r\n", "\b\b"))) shouldBe """[[Default: \t\t, \r\n, \b\b]]."""
+  }
+
   private def printArgumentUsage(name: String, shortName: Option[Char], theType: String,
                                  collectionDescription: Option[String], argumentDescription: String,
                                  optional: Boolean = false): String = {

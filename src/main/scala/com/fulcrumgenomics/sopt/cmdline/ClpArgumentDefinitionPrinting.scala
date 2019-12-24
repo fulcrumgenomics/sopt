@@ -42,6 +42,15 @@ object ClpArgumentDefinitionPrinting {
   private[cmdline] val ArgumentDefaultValuePrefix: String = "Default:"
   private[cmdline] val ArgumentOptionalValue: String = "Optional"
 
+  /** A collection of non-printing ASCII characters and their string literals. */
+  private[cmdline] val NonPrintingCharacters: Map[String, String] = Map(
+    "\t" -> """\t""",
+    "\b" -> """\b""",
+    "\n" -> """\n""",
+    "\r" -> """\r""",
+    "\f" -> """\f""",
+  )
+
   /**  For formatting argument section of usage message. */
   private val ArgumentColumnWidth: Int = 30
   private val DescriptionColumnWidth: Int = Sopt.TerminalWidth - ArgumentColumnWidth
@@ -115,16 +124,26 @@ object ClpArgumentDefinitionPrinting {
     KGRN(if (vs.isEmpty) s"[[$ArgumentOptionalValue]]." else s"[[$ArgumentDefaultValuePrefix ${vs.mkString(", ")}]].")
   }
 
+  /** Converts all non-printing characters in a string into their string literal form. */
+  private[sopt] def nonPrintingToStringLiteral(string: String): String = {
+    NonPrintingCharacters.foldLeft(string) { (toModify, pair: (String, String)) =>
+      toModify.replaceAllLiterally(pair._1, pair._2)
+    }
+  }
+
   /** Returns the set of default values as a Seq of Strings, one per default value. */
   private [sopt] def defaultValuesAsSeq(value: Option[_]): Seq[String] = value match {
       case None | Some(None) | Some(Nil)  => Seq.empty
       case Some(s) if Set.empty == s      => Seq.empty
-      case Some(c) if c.isInstanceOf[util.Collection[_]] => c.asInstanceOf[util.Collection[_]].iterator.map(_.toString).toSeq
-      case Some(t) if t.isInstanceOf[Iterable[_]]     => t.asInstanceOf[Iterable[_]].toSeq.map(_.toString)
-      case Some(Some(x)) => Seq(x.toString)
-      case Some(x)       => Seq(x.toString)
+      case Some(c) if c.isInstanceOf[util.Collection[_]] => {
+        c.asInstanceOf[util.Collection[_]].map(_.toString).map(nonPrintingToStringLiteral).toSeq
+      }
+      case Some(t) if t.isInstanceOf[Iterable[_]]        => {
+        t.asInstanceOf[Iterable[_]].map(_.toString).map(nonPrintingToStringLiteral).toSeq
+      }
+      case Some(Some(x)) => Seq(nonPrintingToStringLiteral(x.toString))
+      case Some(x)       => Seq(nonPrintingToStringLiteral(x.toString))
     }
-
 
   /** Prints the usage for a given argument given its various elements */
   private[cmdline] def printArgumentUsage(stringBuilder: StringBuilder, name: String, shortName: Option[Char], theType: String,
