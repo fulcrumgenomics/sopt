@@ -42,8 +42,8 @@ object ClpArgumentDefinitionPrinting {
   private[cmdline] val ArgumentDefaultValuePrefix: String = "Default:"
   private[cmdline] val ArgumentOptionalValue: String = "Optional"
 
-  /** A collection of non-printing ASCII characters and their string literals. */
-  private[cmdline] val NonPrintingCharacters: Map[String, String] = Map(
+  /** A collection of escaped non-printing ASCII characters and their string literals. */
+  private[cmdline] val EscapedNonPrintingCharacters: Map[String, String] = Map(
     "\t" -> """\t""",
     "\b" -> """\b""",
     "\n" -> """\n""",
@@ -126,8 +126,8 @@ object ClpArgumentDefinitionPrinting {
 
   /** Converts all non-printing characters in a string into their string literal form. */
   private[sopt] def nonPrintingToStringLiteral(string: String): String = {
-    NonPrintingCharacters.foldLeft(string) { (toModify, pair: (String, String)) =>
-      toModify.replaceAllLiterally(pair._1, pair._2)
+    EscapedNonPrintingCharacters.foldLeft(string) { case (toModify, (char, literal)) =>
+      toModify.replaceAllLiterally(char, literal)
     }
   }
 
