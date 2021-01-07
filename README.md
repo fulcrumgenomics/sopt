@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/fulcrumgenomics/sopt.svg?branch=master)](https://travis-ci.org/fulcrumgenomics/sopt)
+[![Build Status](https://github.com/fulcrumgenomics/sopt/workflows/unit%20tests/badge.svg)](https://github.com/fulcrumgenomics/sopt/actions?query=workflow%3A%22unit+tests%22)
 [![Coverage Status](https://codecov.io/github/fulcrumgenomics/sopt/coverage.svg?branch=master)](https://codecov.io/github/fulcrumgenomics/sopt?branch=master)
 [![Code Review](https://api.codacy.com/project/badge/grade/52e1d786d9784c7192fae2f8e853fa34)](https://www.codacy.com/app/contact_32/sopt)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fulcrumgenomics/sopt_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fulcrumgenomics/sopt_2.12)
