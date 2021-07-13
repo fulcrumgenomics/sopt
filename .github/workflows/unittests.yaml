@@ -11,11 +11,9 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Scala
-        uses: olafurpg/setup-scala@v1
+        uses: olafurpg/setup-scala@v12
         with:
           java-version: openjdk@8
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
       - name: Unit Tests
         run: |
           sbt +clean coverage +test && sbt coverageReport coverageAggregate
