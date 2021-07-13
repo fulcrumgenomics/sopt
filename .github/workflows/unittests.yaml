@@ -13,7 +13,7 @@ jobs:
       - name: Setup Scala
         uses: olafurpg/setup-scala@v12
         with:
-          java-version: openjdk@1.9.0
+          java-version: adopt-openj9@1.8.0-292
       - name: Unit Tests
         run: |
           sbt +clean coverage +test && sbt coverageReport coverageAggregate
@@ -50,7 +50,7 @@ jobs:
       - name: Setup Scala
         uses: olafurpg/setup-scala@v12
         with:
-          java-version: openjdk@1.9.0
+          java-version: adopt-openj9@1.8.0-292
       - name: Upload to Sonatype
         run: |
           sbt +publish
