@@ -16,6 +16,7 @@ jobs:
           java-version: adopt-openj9@1.8.0-292
       - name: Unit Tests
         run: |
+          set -e
           sbt +clean coverage +test && sbt coverageReport coverageAggregate
           find $HOME/.sbt -name "*.lock" | xargs rm
           find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
