@@ -1,6 +1,6 @@
 [![Build Status](https://github.com/fulcrumgenomics/sopt/workflows/unit%20tests/badge.svg)](https://github.com/fulcrumgenomics/sopt/actions?query=workflow%3A%22unit+tests%22)
 [![Coverage Status](https://codecov.io/github/fulcrumgenomics/sopt/coverage.svg?branch=master)](https://codecov.io/github/fulcrumgenomics/sopt?branch=master)
-[![Code Review](https://api.codacy.com/project/badge/grade/52e1d786d9784c7192fae2f8e853fa34)](https://www.codacy.com/app/contact_32/sopt)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/73e4bc6a95d045c58685347e74b6b02e)](https://www.codacy.com/gh/fulcrumgenomics/sopt/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=fulcrumgenomics/sopt&amp;utm_campaign=Badge_Grade)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fulcrumgenomics/sopt_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fulcrumgenomics/sopt_2.12)
 [![Javadocs](http://javadoc.io/badge/com.fulcrumgenomics/sopt_2.12.svg)](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.12)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/fulcrumgenomics/sopt/blob/master/LICENSE)
