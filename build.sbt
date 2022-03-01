@@ -85,11 +85,12 @@ lazy val commonSettings = Seq(
   organizationHomepage := Some(url("http://www.fulcrumgenomics.com")),
   homepage             := Some(url("http://github.com/fulcrumgenomics/sopt")),
   startYear            := Some(2015),
-  scalaVersion         := "2.13.0",
-  crossScalaVersions   := Seq("2.12.8", "2.13.0"),
+  scalaVersion         := "2.13.8",
+  crossScalaVersions   := Seq("2.13.8"),
   scalacOptions        ++= Seq("-target:jvm-1.8", "-deprecation", "-unchecked"),
   scalacOptions in (Compile, doc) ++= docScalacOptions,
   scalacOptions in (Test, doc) ++= docScalacOptions,
+  useCoursier :=  false,
   autoAPIMappings := true,
   testOptions in Test  += Tests.Argument(TestFrameworks.ScalaTest, "-h", Option(System.getenv("TEST_HTML_REPORTS")).getOrElse(htmlReportsDirectory)),
   testOptions in Test  += Tests.Argument("-l", "LongRunningTest"), // ignores long running tests
@@ -116,7 +117,7 @@ lazy val root = Project(id="sopt", base=file("."))
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang"       %  "scala-reflect" %  scalaVersion.value,
-      "com.fulcrumgenomics"  %% "commons"       % "1.1.0",
+      "com.fulcrumgenomics"  %% "commons"       % "1.3.0",
       "com.vladsch.flexmark" % "flexmark"       % "0.18.5",
 
       //---------- Test libraries -------------------//
