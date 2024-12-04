@@ -4,7 +4,8 @@ on: [push, pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    environment: github-actions
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -21,6 +22,7 @@ jobs:
       - name: Code Coverage
         uses: codecov/codecov-action@v1
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests # optional
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
@@ -38,7 +40,8 @@ jobs:
     if: github.repository == 'fulcrumgenomics/sopt' && github.ref == 'refs/heads/main'
     
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    environment: github-actions
     env:
       SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
       SONATYPE_PASS: ${{ secrets.SONATYPE_PASS }}
