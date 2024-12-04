@@ -5,6 +5,7 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-24.04
+    environment: github-actions
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -39,6 +40,7 @@ jobs:
     
     needs: test
     runs-on: ubuntu-24.04
+    environment: github-actions
     env:
       SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
       SONATYPE_PASS: ${{ secrets.SONATYPE_PASS }}
