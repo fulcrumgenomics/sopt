@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -38,7 +38,7 @@ jobs:
     if: github.repository == 'fulcrumgenomics/sopt' && github.ref == 'refs/heads/main'
     
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
       SONATYPE_PASS: ${{ secrets.SONATYPE_PASS }}
