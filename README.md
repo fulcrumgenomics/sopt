@@ -9,7 +9,16 @@
 
 _sopt_ is a scala library for command line option parsing with minimal dependencies.  It is designed for toolkits that have multiple "commands" such as [dagr](https://github.com/fulcrumgenomics/dagr) and [fgbio](https://github.com/fulcrumgenomics/fgbio).  The latest API documentation can be found [here](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.12).
 
-It has the following high level features:
+<p>
+<a href float="left"="https://fulcrumgenomics.com"><img src=".github/logos/fulcrumgenomics.svg" alt="Fulcrum Genomics" height="100"/></a>
+</p>
+
+[Visit us at Fulcrum Genomics](www.fulcrumgenomics.com) to learn more about how we can power your Bioinformatics with sopt and beyond.
+
+<a href="mailto:contact@fulcrumgenomics.com?subject=[GitHub inquiry]"><img src="https://img.shields.io/badge/Email_us-brightgreen.svg?&style=for-the-badge&logo=gmail&logoColor=white"/></a>
+<a href="https://www.fulcrumgenomics.com"><img src="https://img.shields.io/badge/Visit_Us-blue.svg?&style=for-the-badge&logo=wordpress&logoColor=white"/></a>
+
+_sopt_ has the following high level features:
 
 - Support for GNU/posix style argument names and conventions
   - Camel case names in scala are auto-translated to GNU style options (e.g. `inputFile -> input-file`)
