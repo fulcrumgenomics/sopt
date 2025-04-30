@@ -5,7 +5,6 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-24.04
-    environment: github-actions
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,7 +19,7 @@ jobs:
           set -e
           sbt +clean coverage +test && sbt coverageReport coverageAggregate && (find $HOME/.sbt -name "*.lock" | xargs rm) && (find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm)
       - name: Code Coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@ad3126e916f78f00edff4ed0317cf185271ccc2d  # v5.4.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests # optional
