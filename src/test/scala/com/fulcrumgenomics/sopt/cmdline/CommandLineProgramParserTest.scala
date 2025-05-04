@@ -978,12 +978,25 @@ with CommandLineParserStrings with CaptureSystemStreams with BeforeAndAfterAll {
   }
 
   it should "accept flags with a combination of arguments and no arguments" in {
-    val args = Seq[String]("--flag1", "T", "--flag2")
-    val p = parser(classOf[FlagClass])
-    inside (p.parseAndBuild(args=args)) { case ParseSuccess() => }
-    val task = p.instance.get
-    task.flag1 shouldBe true
-    task.flag2 shouldBe true
+    Seq("T", "F").foreach { flag1Value =>
+      val args = Seq[String]("--flag1", flag1Value, "--flag2")
+      val p = parser(classOf[FlagClass])
+      inside(p.parseAndBuild(args = args)) { case ParseSuccess() => }
+      val task = p.instance.get
+      task.flag1 shouldBe flag1Value == "T"
+      task.flag2 shouldBe true
+    }
+  }
+
+  it should "accept flags with --no-<arg>" in {
+    Seq("T", "F").foreach { flag1Value =>
+      val args = Seq[String]("--no-flag1", flag1Value, "--no-flag2")
+      val p = parser(classOf[FlagClass])
+      inside(p.parseAndBuild(args = args)) { case ParseSuccess() => }
+      val task = p.instance.get
+      task.flag1 shouldBe flag1Value == "F"
+      task.flag2 shouldBe false
+    }
   }
 
   it should "accept setting private arguments" in {
