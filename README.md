@@ -222,7 +222,7 @@ or with multiple values following a single argument name:
 
 Arguments are optional on the command line if any of the following are true:
 
-- The argument has a default value
+- The argument is a primitive type and has a default value
 - The argument's type is `Option[_]`
 - The argument's type is a collection type (e.g. `Seq`) and `minElements` is set to 0
 
