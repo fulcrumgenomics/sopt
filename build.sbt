@@ -51,11 +51,9 @@ assemblyJarName in assembly := "sopt-" + version.value + ".jar"
 ////////////////////////////////////////////////////////////////////////////////////////////////
 publishMavenStyle := true
 publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+  if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+  else localStaging.value
 }
 publishArtifact in Test := false
 pomIncludeRepository := { _ => false }
@@ -63,7 +61,7 @@ pomIncludeRepository := { _ => false }
 credentials ++= (for {
   username <- Option(System.getenv().get("SONATYPE_USER"))
   password <- Option(System.getenv().get("SONATYPE_PASS"))
-} yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq
+} yield Credentials("Sonatype Nexus Repository Manager", "central.sonatype.com", username, password)).toSeq
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Coverage settings: include all sources
@@ -85,8 +83,8 @@ lazy val commonSettings = Seq(
   organizationHomepage := Some(url("http://www.fulcrumgenomics.com")),
   homepage             := Some(url("http://github.com/fulcrumgenomics/sopt")),
   startYear            := Some(2015),
-  scalaVersion         := "2.13.8",
-  crossScalaVersions   := Seq("2.13.8"),
+  scalaVersion         := "2.13.14",
+  crossScalaVersions   := Seq("2.13.14"),
   scalacOptions        ++= Seq("-target:jvm-1.8", "-deprecation", "-unchecked"),
   scalacOptions in (Compile, doc) ++= docScalacOptions,
   scalacOptions in (Test, doc) ++= docScalacOptions,
@@ -97,10 +95,38 @@ lazy val commonSettings = Seq(
   // uncomment for full stack traces
   //testOptions in Test  += Tests.Argument("-oD"),
   fork in Test         := true,
-  resolvers            += Resolver.jcenterRepo,
-  resolvers            += Resolver.sonatypeRepo("public"),
+  resolvers            += Resolver.sonatypeCentralSnapshots,
+  resolvers            += Resolver.sonatypeCentralRepo("releases"),
+  resolvers            += Resolver.mavenLocal,
   shellPrompt          := { state => "%s| %s> ".format(GitCommand.prompt.apply(state), version.value) },
-  updateOptions        := updateOptions.value.withCachedResolution(true)
+  updateOptions        := updateOptions.value.withCachedResolution(true),
+  pomExtra             := <url>https://github.com/fulcrumgenomics/fgbio</url>
+    <licenses>
+      <license>
+        <name>MIT License</name>
+        <url>https://www.opensource.org/licenses/mit-license.html</url>
+      </license>
+    </licenses>
+    <developers>
+      <developer>
+        <id>nh13</id>
+        <name>Nils Homer</name>
+        <url>https://github.com/nh13</url>
+        <email>nils@fulcrumgenomics.com</email>
+      </developer>
+      <developer>
+        <id>tfenne</id>
+        <name>Tim Fennell</name>
+        <url>https://github.com/tfenne</url>
+        <email>tim@fulcrumgenomics.com</email>
+      </developer>
+      <developer>
+        <id>clintval</id>
+        <name>Clint Valentine</name>
+        <url>https://github.com/clintval</url>
+        <email>clint@fulcrumgenomics.com</email>
+      </developer>
+    </developers>
 ) ++ Defaults.coreDefaultSettings
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
