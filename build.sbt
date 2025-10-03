@@ -100,7 +100,7 @@ lazy val commonSettings = Seq(
   resolvers            += Resolver.mavenLocal,
   shellPrompt          := { state => "%s| %s> ".format(GitCommand.prompt.apply(state), version.value) },
   updateOptions        := updateOptions.value.withCachedResolution(true),
-  pomExtra             := <url>https://github.com/fulcrumgenomics/fgbio</url>
+  pomExtra             := <url>https://github.com/fulcrumgenomics/sopt</url>
     <licenses>
       <license>
         <name>MIT License</name>
