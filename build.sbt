@@ -143,11 +143,11 @@ lazy val root = Project(id="sopt", base=file("."))
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang"       %  "scala-reflect" %  scalaVersion.value,
-      "com.fulcrumgenomics"  %% "commons"       % "1.3.0",
+      "com.fulcrumgenomics"  %% "commons"       % "1.6.0",
       "com.vladsch.flexmark" % "flexmark"       % "0.18.5",
 
       //---------- Test libraries -------------------//
-      "org.scalatest"             %% "scalatest"     % "3.0.8"  % "test->*" excludeAll ExclusionRule(organization="org.junit", name="junit")
+      "org.scalatest"             %% "scalatest"     % "3.1.3"  % "test->*" excludeAll ExclusionRule(organization="org.junit", name="junit")
     )
   )
 
@@ -185,4 +185,4 @@ val customMergeStrategy: String => MergeStrategy = {
     MergeStrategy.first
   case _ => MergeStrategy.deduplicate
 }
-assemblyMergeStrategy in assembly := customMergeStrategy
+assembly / assemblyMergeStrategy := customMergeStrategy
