@@ -26,6 +26,8 @@ object Sopt {
   case class SubcommandSuccess[A,B](command: A, subcommand: B) extends Result[A, B]
   /** The result type when a parsing failure occurrs. */
   case class Failure(usage: () => String) extends Result[Nothing,Nothing]
+  /** The result type when --version was requested (not a failure). */
+  case class Version(version: () => String) extends Result[Nothing,Nothing]
 
   protected trait MarkDownDescription {
     /** The description as MarkDown text. */
