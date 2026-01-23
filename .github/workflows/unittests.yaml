@@ -16,7 +16,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     concurrency:
-      group: test-${{ github.workflow }}-${{ github.ref }}
+      group: test-${{ github.workflow }}-${{ github.ref }}-${{ matrix.jvm }}
       cancel-in-progress: true
     strategy:
       matrix:
