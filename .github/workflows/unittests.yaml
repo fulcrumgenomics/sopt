@@ -108,4 +108,4 @@ jobs:
       - name: Build, sign, and publish artifacts
         shell: bash -l {0}
         run: |
-          sbt +publishSigned sonatypeCentralUpload
+          sbt +publishSigned sonaRelease
