@@ -105,7 +105,7 @@ jobs:
         shell: bash -l {0}
         run: |
           echo "$PGP_SECRET" | base64 --decode | gpg --import --batch --yes
-      - name: Build and sign artifacts
+      - name: Build, sign, and publish artifacts
         shell: bash -l {0}
         run: |
-          sbt +publishSigned
+          sbt +publishSigned sonatypeCentralUpload
