@@ -25,8 +25,8 @@
 package com.fulcrumgenomics.sopt.util
 
 object TermCode  {
-  /** True if we are to use ANSI colors to print to the terminal, false otherwise. */
-  var printColor: Boolean = true
+  /** True to use ANSI colors, false otherwise. Respects NO_COLOR env var per no-color.org. */
+  var printColor: Boolean = Option(System.getenv("NO_COLOR")).forall(_.isEmpty)
 }
 
 /** Base class for all terminal codes (ex ANSI colors for terminal output).  The apply method applies the code to the

@@ -27,7 +27,7 @@ package com.fulcrumgenomics.sopt.cmdline
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.reflect.ReflectionUtil
 import com.fulcrumgenomics.commons.util.CaptureSystemStreams
-import com.fulcrumgenomics.sopt.Sopt.{CommandSuccess, Failure, SubcommandSuccess}
+import com.fulcrumgenomics.sopt.Sopt.{CommandSuccess, Failure, SubcommandSuccess, Version}
 import com.fulcrumgenomics.sopt.{Sopt, _}
 import com.fulcrumgenomics.sopt.cmdline.testing.clps._
 import com.fulcrumgenomics.sopt.util.{TermCode, UnitSpec}
@@ -71,6 +71,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       result match {
         case CommandSuccess(command) => (parser, Some(command), "")
         case Failure(usage)          => (parser, None, usage())
+        case Version(version)        => (parser, None, version())
         case other                   => unreachable(s"Should not have matched: $other")
       }
     }
@@ -204,6 +205,7 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
       parser.parseCommandAndSubCommand[Command](args, subcommands) match {
         case SubcommandSuccess(cmd, sub) => (parser, Some(cmd), Some(sub), "")
         case Failure(usage)              => (parser, None, None, usage())
+        case Version(version)            => (parser, None, None, version())
         case other                       => unreachable(s"Should not have gotten $other")
       }
     }
@@ -529,5 +531,29 @@ class CommandLineParserTest extends UnitSpec with CaptureSystemStreams with Befo
     testSplitArgs(Seq[String](nameOf(classOf[CommandLineProgramOne])), 0, 1)
     testSplitArgs(Seq[String]("blah", nameOf(classOf[CommandLineProgramOne])), 1, 1)
     testSplitArgs(Seq[String]("blah", nameOf(classOf[CommandLineProgramOne]), "blah"), 1, 2)
+  }
+
+  "CommandLineParser.parseSubCommand" should "return Version result when --version is given after clp name" in {
+    val parser = new CommandLineParser[TestingClp]("test")
+    val subcommands = Sopt.find[TestingClp](TestParseSubCommand.packageList, includeHidden = true)
+    Seq("-v", "--version").foreach { arg =>
+      parser.parseSubCommand(Seq(nameOf(classOf[CommandLineProgramOne]), arg), subcommands) match {
+        case Version(versionFn) =>
+          versionFn() should include("Version:")
+        case other => fail(s"Expected Version but got $other")
+      }
+    }
+  }
+
+  "CommandLineParser.parseCommandAndSubCommand" should "return Version result when --version is given before clp name" in {
+    val parser = new CommandLineParser[TestingClp]("test")
+    val subcommands = Sopt.find[TestingClp](TestParseSubCommand.packageList, includeHidden = true)
+    Seq("-v", "--version").foreach { arg =>
+      parser.parseCommandAndSubCommand[CommandLineProgramTesting](Seq(arg), subcommands) match {
+        case Version(versionFn) =>
+          versionFn() should include("Version:")
+        case other => fail(s"Expected Version but got $other")
+      }
+    }
   }
 }

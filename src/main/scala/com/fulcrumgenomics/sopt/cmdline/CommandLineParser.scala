@@ -26,7 +26,7 @@ package com.fulcrumgenomics.sopt.cmdline
 
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.reflect.ReflectionUtil
-import com.fulcrumgenomics.sopt.Sopt.{CommandSuccess, Failure, Result, SubcommandSuccess}
+import com.fulcrumgenomics.sopt.Sopt.{CommandSuccess, Failure, Result, SubcommandSuccess, Version}
 import com.fulcrumgenomics.sopt.{Sopt, clp}
 import com.fulcrumgenomics.sopt.util.ParsingUtil._
 import com.fulcrumgenomics.sopt.util._
@@ -320,8 +320,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
             print(clpParser.usage(withVersion=withVersion))
             Failure(() => usagePrinter.toString())
           case ParseVersion()  => // Case 7
-            print(clpParser.version)
-            Failure(() => usagePrinter.toString())
+            Version(() => clpParser.version)
           case ParseSuccess() => // Case 8
             val clp: SubCommand = clpParser.instance.get
             try {
@@ -400,8 +399,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
         print(subCommandListUsage(subcommands, commandLineName, withPreamble=true))
         Failure(() => usagePrinter.toString())
       case ParseVersion() => // Case (3)
-        print(mainClassParser.version)
-        Failure(() => usagePrinter.toString())
+        Version(() => mainClassParser.version)
       case ParseSuccess() => // Case (4-8)
         /////////////////////////////////////////////////////////////////////////
         // Get setup, and attempt to ID and load the clp class
@@ -411,6 +409,7 @@ class CommandLineParser[SubCommand](val commandLineName: String)
 
         this.parseSubCommand(args=clpArgs, subcommands=subcommands, extraUsage = Some(mainClassParser.usage()), withVersion=false) match {
           case f: Failure          => f
+          case v: Version          => v
           case CommandSuccess(sub) => SubcommandSuccess(mainInstance, sub)
           case other               => unreachable("Why did parseSubCommand return " + other)
         }
