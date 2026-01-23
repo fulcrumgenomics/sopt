@@ -12,13 +12,12 @@ on:
       SONATYPE_PASS:
         required: false
 
-concurrency:
-  group: unittest-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   test:
     runs-on: ubuntu-latest
+    concurrency:
+      group: test-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     strategy:
       matrix:
         jvm: ["temurin:1.8.0-442", "temurin:1.11.0.27", "temurin:1.17.0.15", "temurin:1.21.0.7", "temurin:1.22.0.2"]
@@ -57,6 +56,9 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     environment: github-actions
+    concurrency:
+      group: release-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: false
     env:
       SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
       SONATYPE_PASS: ${{ secrets.SONATYPE_PASS }}
