@@ -1,13 +1,13 @@
 [![Build Status](https://github.com/fulcrumgenomics/sopt/workflows/unit%20tests/badge.svg)](https://github.com/fulcrumgenomics/sopt/actions?query=workflow%3A%22unit+tests%22)
 [![Coverage Status](https://codecov.io/github/fulcrumgenomics/sopt/coverage.svg?branch=main)](https://codecov.io/github/fulcrumgenomics/sopt?branch=main)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fulcrumgenomics/sopt_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fulcrumgenomics/sopt_2.12)
-[![Javadocs](http://javadoc.io/badge/com.fulcrumgenomics/sopt_2.12.svg)](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.12)
+[![Maven Central](https://img.shields.io/maven-central/v/com.fulcrumgenomics/sopt_2.13)](https://central.sonatype.com/artifact/com.fulcrumgenomics/sopt_2.13)
+[![Javadocs](http://javadoc.io/badge/com.fulcrumgenomics/sopt_2.13.svg)](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.13)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/fulcrumgenomics/sopt/blob/main/LICENSE)
 [![Language](http://img.shields.io/badge/language-scala-brightgreen.svg)](http://www.scala-lang.org/)
 
 # sopt - Scala Option Parsing Library
 
-_sopt_ is a scala library for command line option parsing with minimal dependencies.  It is designed for toolkits that have multiple "commands" such as [dagr](https://github.com/fulcrumgenomics/dagr) and [fgbio](https://github.com/fulcrumgenomics/fgbio).  The latest API documentation can be found [here](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.12).
+_sopt_ is a scala library for command line option parsing with minimal dependencies.  It is designed for toolkits that have multiple "commands" such as [dagr](https://github.com/fulcrumgenomics/dagr) and [fgbio](https://github.com/fulcrumgenomics/fgbio).  The latest API documentation can be found [here](http://javadoc.io/doc/com.fulcrumgenomics/sopt_2.13).
 
 <p>
 <a href="https://fulcrumgenomics.com">
@@ -144,7 +144,7 @@ Error: Argument 'name' is required.
 
 ## Documentation
 
-API documentation for all versions can be viewed on [javadoc.io](http://www.javadoc.io/doc/com.fulcrumgenomics/sopt_2.12/0.2.0).
+API documentation for all versions can be viewed on [javadoc.io](http://www.javadoc.io/doc/com.fulcrumgenomics/sopt_2.13).
  
 ## Argument Naming & Formatting
 
