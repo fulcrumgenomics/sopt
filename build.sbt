@@ -144,11 +144,11 @@ lazy val root = Project(id="sopt", base=file("."))
     libraryDependencies ++= Seq(
       "org.scala-lang"       %  "scala-reflect" %  scalaVersion.value,
       "com.fulcrumgenomics"  %% "commons"       % "1.6.0",
-      "com.vladsch.flexmark" % "flexmark"       % "0.64.8",
+      "com.vladsch.flexmark" % "flexmark"       % "0.62.2", // 0.62.2 is the last release built for JDK 8; 0.64+ requires JDK 11
 
       //---------- Test libraries -------------------//
       "org.scalatest"             %% "scalatest"     % "3.2.20" % "test->*" excludeAll ExclusionRule(organization="org.junit", name="junit"),
-      "com.vladsch.flexmark"      %  "flexmark-all"  % "0.64.8" % "test" // for ScalaTest's HtmlReporter (-h test option)
+      "com.vladsch.flexmark"      %  "flexmark-all"  % "0.62.2" % "test" // for ScalaTest's HtmlReporter (-h test option)
     )
   )
 
