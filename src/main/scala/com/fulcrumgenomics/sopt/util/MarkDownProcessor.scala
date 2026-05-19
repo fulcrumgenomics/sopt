@@ -27,7 +27,8 @@ package com.fulcrumgenomics.sopt.util
 import com.vladsch.flexmark.ast._
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.{Parser, ParserEmulationProfile}
-import com.vladsch.flexmark.util.options.MutableDataSet
+import com.vladsch.flexmark.util.ast.{Document, Node}
+import com.vladsch.flexmark.util.data.MutableDataSet
 
 import scala.collection.mutable.ListBuffer
 import com.fulcrumgenomics.commons.CommonsDef._

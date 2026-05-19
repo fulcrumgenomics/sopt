@@ -23,7 +23,8 @@
  */
 package com.fulcrumgenomics.sopt.util
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 /** Base class for unit and integration testing */
-class UnitSpec extends FlatSpec with Matchers
+class UnitSpec extends AnyFlatSpec with Matchers
