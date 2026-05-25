@@ -166,11 +166,16 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
     */
   private def parseArgs(args: Seq[String]): ParseResult = {
     val parser: OptionParser = new OptionParser(argFilePrefix=Some("@"))
+    val alternateFlagNames = scala.collection.mutable.HashMap[String, String]()
 
     try {
       // Add to the option parsers
       this.argumentLookup.ordered.filterNot(_.hidden).foreach {
-        case arg if arg.isFlag =>        parser.acceptFlag(          arg.names: _*)
+        case arg if arg.isFlag =>
+          parser.acceptFlag(          arg.names: _*)
+          val noName = f"no-${arg.longName}"
+          parser.acceptFlag(noName)
+          alternateFlagNames.addOne(noName -> arg.names.head)
         case arg if !arg.isCollection => parser.acceptSingleValue(   arg.names: _*)
         case arg =>                      parser.acceptMultipleValues(arg.names: _*)
       }
@@ -181,7 +186,16 @@ class CommandLineProgramParser[T](val targetClass: Class[T], val includeSpecialA
           // set the values
           val parseResults: Iterable[ParseResult] = parser.map {
             case (name: String, values: List[String]) =>
-              this.argumentLookup.forArg(name).foreach(arg => arg.setArgument(values:_*))
+              alternateFlagNames.get(name) match {
+                case Some(_name) =>
+                   this.argumentLookup.forArg(_name).foreach { arg =>
+                     arg.setArgument(values: _*)
+                     arg.value = !arg.value.contains(true)
+                   }
+                case None        =>
+                  this.argumentLookup.forArg(name).foreach(arg => arg.setArgument(values:_*))
+              }
+
               ParseSuccess()
             case _ =>
               ParseFailure(ex=new IllegalStateException("Parser returned an unexpected set of values"), parser.remaining)
